@@ -192,13 +192,6 @@ const ProfilePage: React.FC = () => {
                     <div className="profile-section">
                         <div className="section-header">
                             <h2 className="section-title">Навыки</h2>
-                            <button 
-                                type="button" 
-                                className="section-action"
-                                onClick={() => { /* TODO: Implement add skill functionality */ }}
-                            >
-                                Добавить
-                            </button>
                         </div>
                         
                         <div className="skills-list">

@@ -13,7 +13,7 @@ const StandalonePageControls: React.FC = () => {
     return (
         <div className="standalone-controls">
             <LanguageSwitcher />
-            <button className="control-btn" onClick={handleThemeToggle}>
+            <button className="standalone-btn" onClick={handleThemeToggle}>
                 <i className={`bi ${state.theme === 'light' ? 'bi-sun-fill' : 'bi-moon-fill'}`}></i>
             </button>
         </div>
