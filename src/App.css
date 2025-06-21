@@ -223,6 +223,7 @@ body {
     align-items: center;
     gap: 0.5rem;
     white-space: nowrap;
+    cursor: pointer;
 }
 
 .submenu-item:hover {
@@ -493,6 +494,7 @@ body {
     color: var(--bs-body-color);
     font-weight: 500;
     transition: background-color 0.2s ease;
+    cursor: pointer;
 }
 
 .quick-module-item:hover {
@@ -555,6 +557,7 @@ body {
     text-decoration: none;
     color: var(--bs-body-color);
     transition: background-color 0.2s ease;
+    cursor: pointer;
 }
 
 .favorite-item:hover {

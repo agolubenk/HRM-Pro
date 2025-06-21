@@ -18,6 +18,7 @@ import NewPasswordPage from './pages/NewPasswordPage';
 import ToastContainer from './components/ToastContainer';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
+import SystemSettingsPage from './pages/systemsettings/SystemSettingsPage';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import { I18nextProvider } from 'react-i18next';
 import QuickPanel from './components/QuickPanel';
@@ -91,6 +92,10 @@ const router = createBrowserRouter([
       {
         path: "/account/settings",
         element: <SettingsPage />,
+      },
+      {
+        path: "/settings/*",
+        element: <SystemSettingsPage />,
       },
       {
         path: "/account/activity-log",

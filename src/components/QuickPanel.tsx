@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { storage, getModuleData } from '../utils';
-import { STORAGE_KEYS } from '../constants';
+import { STORAGE_KEYS, MODULES } from '../constants';
 import './QuickPanel.css';
 import { ContextMenu } from './ContextMenu';
 import { Module } from '../types';
@@ -36,6 +37,7 @@ const CollapsibleSection: React.FC<{ title: string; sectionId: string; children:
 
 const QuickPanel: React.FC = () => {
   const { state, dispatch } = useAppContext();
+  const navigate = useNavigate();
   const allModules = getModuleData();
   const { favoriteModules } = state;
   
@@ -69,8 +71,27 @@ const QuickPanel: React.FC = () => {
   };
 
   const handleModuleSelect = (module: Module) => {
-    dispatch({ type: 'SET_ACTIVE_MODULE', payload: module.key });
-    dispatch({ type: 'SET_QUICK_PANEL', payload: false });
+    try {
+      // Сначала закрываем панель
+      dispatch({ type: 'SET_QUICK_PANEL', payload: false });
+      
+      // Затем активируем модуль
+      dispatch({ type: 'SET_ACTIVE_MODULE', payload: module.key });
+      
+      // Навигация на системные настройки
+      if (module.key === MODULES.SETTINGS) {
+        setTimeout(() => {
+          try {
+            // Используем window.location.href для абсолютного перехода
+            window.location.href = '/settings/general';
+          } catch (error) {
+            console.error('Ошибка навигации:', error);
+          }
+        }, 100);
+      }
+    } catch (error) {
+      console.error('Ошибка в handleModuleSelect:', error);
+    }
   };
 
   return (
@@ -100,12 +121,12 @@ const QuickPanel: React.FC = () => {
              <div className="d-flex flex-column gap-1">
                 {favoriteModuleObjects.length > 0 ? (
                     favoriteModuleObjects.map(module => (
-                        <a href="/#" key={module.key} className="favorite-item" 
+                        <div key={module.key} className="favorite-item" 
                            onClick={() => handleModuleSelect(module)} 
                            onContextMenu={(e) => handleContextMenu(e, module)}>
                             <i className="bi bi-star-fill text-warning"></i>
                             <span>{module.name}</span>
-                        </a>
+                        </div>
                     ))
                 ) : (
                     <div className="text-muted text-center p-2" style={{ fontSize: '0.875rem' }}>Нет избранных модулей</div>
@@ -116,12 +137,12 @@ const QuickPanel: React.FC = () => {
         <CollapsibleSection title="Модули" sectionId="modules">
           <div className="quick-module-list">
             {allModules.map(module => (
-              <a href="/#" key={module.key} className="quick-module-item" 
+              <div key={module.key} className="quick-module-item" 
                  onClick={() => handleModuleSelect(module)}
                  onContextMenu={(e) => handleContextMenu(e, module)}>
                 <i className={`bi ${module.icon} quick-module-icon ${module.color}`}></i>
                 <span>{module.name}</span>
-              </a>
+              </div>
             ))}
           </div>
         </CollapsibleSection>

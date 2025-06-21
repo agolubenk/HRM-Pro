@@ -1,15 +1,39 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { getModuleData } from '../utils';
 import { Module } from '../types';
 import { ContextMenu } from './ContextMenu';
+import { MODULES } from '../constants';
 
 const ModuleCard: React.FC<{ module: Module; onContextMenu: (e: React.MouseEvent, module: Module) => void; isFavorite: boolean }> = ({ module, onContextMenu, isFavorite }) => {
     const { state, dispatch } = useAppContext();
+    const navigate = useNavigate();
+    
+    const handleClick = (e: React.MouseEvent) => {
+        try {
+            e.preventDefault();
+            dispatch({ type: 'SET_ACTIVE_MODULE', payload: module.key });
+            
+            // Навигация на системные настройки
+            if (module.key === MODULES.SETTINGS) {
+                setTimeout(() => {
+                    try {
+                        // Используем window.location.href для абсолютного перехода
+                        window.location.href = '/settings/general';
+                    } catch (error) {
+                        console.error('Ошибка навигации в ModuleGrid:', error);
+                    }
+                }, 100);
+            }
+        } catch (error) {
+            console.error('Ошибка в handleClick ModuleGrid:', error);
+        }
+    };
     
     return (
-        <a href="/#" className={`module-card ${state.activeModule === module.key ? 'active' : ''}`} 
-           onClick={(e) => { e.preventDefault(); dispatch({ type: 'SET_ACTIVE_MODULE', payload: module.key }); }}
+        <div className={`module-card ${state.activeModule === module.key ? 'active' : ''}`} 
+           onClick={handleClick}
            onContextMenu={(e) => onContextMenu(e, module)}>
             
             <div className="module-icon-wrapper">
@@ -18,7 +42,7 @@ const ModuleCard: React.FC<{ module: Module; onContextMenu: (e: React.MouseEvent
             </div>
             <div className="module-name">{module.name}</div>
             <div className="module-count">{module.count}</div>
-        </a>
+        </div>
     );
 };
 
