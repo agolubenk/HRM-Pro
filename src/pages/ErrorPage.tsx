@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import './ErrorPage.css';
 
@@ -82,11 +82,21 @@ const buttonText = {
   en: 'Return to Home',
 };
 
+const backButtonText = {
+  ru: 'На предыдущую страницу',
+  en: 'Go Back',
+};
+
 const ErrorPage: React.FC<ErrorPageProps> = ({ errorCode }) => {
   const { state } = useAppContext();
+  const navigate = useNavigate();
   const lang = state.language === 'ru' ? 'ru' : 'en';
 
   const details = errorDetails[errorCode] || defaultError;
+
+  const handleGoBack = () => {
+    navigate(-1);
+  };
 
   return (
     <div className="error-container">
@@ -95,10 +105,16 @@ const ErrorPage: React.FC<ErrorPageProps> = ({ errorCode }) => {
         <div className="error-code">{errorCode}</div>
         <h1 className="error-title">{details.title[lang]}</h1>
         <p className="error-message">{details.message[lang]}</p>
-        <Link to="/" className="error-page-btn-primary">
-          <i className="bi bi-house-door me-2"></i>
-          <span>{buttonText[lang]}</span>
-        </Link>
+        <div className="error-buttons">
+          <Link to="/" className="error-page-btn-primary">
+            <i className="bi bi-house-door me-2"></i>
+            <span>{buttonText[lang]}</span>
+          </Link>
+          <button onClick={handleGoBack} className="error-page-btn-secondary">
+            <i className="bi bi-arrow-left me-2"></i>
+            <span>{backButtonText[lang]}</span>
+          </button>
+        </div>
       </div>
     </div>
   );
