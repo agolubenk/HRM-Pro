@@ -13,6 +13,7 @@ export const STORAGE_KEYS = {
     MINIMIZED_NOTIFICATIONS: 'hrm_minimized_notifications',
     SELECTED_THEME: 'selected-theme',
     SELECTED_ACCENT: 'selected-accent',
+    PINNED_TASKS: 'hrm_pinned_tasks',
 };
 
 type Theme = 'light' | 'dark';
@@ -27,7 +28,7 @@ interface AppState {
   mobileSearchOpen: boolean;
   activeModule: string | null;
   favoriteModules: string[];
-  pinnedTasks: string[];
+  pinnedTasks: number[];
   pinnedNotifications: number[];
   selectedWidgetIds: string[];
 }
@@ -48,6 +49,8 @@ type AppAction =
   | { type: 'PIN_MODULE_AS_TASK'; payload: string }
   | { type: 'PIN_NOTIFICATION'; payload: number }
   | { type: 'UNPIN_NOTIFICATION'; payload: number }
+  | { type: 'PIN_TASK'; payload: number }
+  | { type: 'UNPIN_TASK'; payload: number }
   | { type: 'SET_SELECTED_WIDGETS'; payload: string[] };
 
 const defaultTasks: Task[] = [
@@ -88,7 +91,7 @@ const defaultTasks: Task[] = [
 ];
 
 const initialState: AppState = {
-  tasks: defaultTasks,
+  tasks: storage.get(STORAGE_KEYS.TASKS) || defaultTasks,
   currentUser: {
     id: 'user-001',
     name: 'Админ Иванов',
@@ -102,15 +105,15 @@ const initialState: AppState = {
     phone: '+7 (999) 123-45-67',
     telegram: '@ivanov_admin'
   },
-  notifications: [],
+  notifications: storage.get('hrm_notifications') || [],
   theme: storage.get(STORAGE_KEYS.THEME) || 'light',
   language: storage.get(STORAGE_KEYS.LANGUAGE) || 'ru',
   quickPanelOpen: false,
   mobileSearchOpen: false,
   activeModule: null,
   favoriteModules: storage.get(STORAGE_KEYS.FAVORITE_MODULES) || [],
-  pinnedTasks: [],
-  pinnedNotifications: storage.get(STORAGE_KEYS.PINNED_NOTIFICATIONS) || [1, 2, 3],
+  pinnedTasks: storage.get(STORAGE_KEYS.PINNED_TASKS) || [1, 2, 3, 11, 15],
+  pinnedNotifications: storage.get(STORAGE_KEYS.PINNED_NOTIFICATIONS) || [],
   selectedWidgetIds: storage.get(STORAGE_KEYS.SELECTED_WIDGETS) || ['salary', 'vacation', 'courses'],
 };
 
@@ -123,7 +126,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'REMOVE_TASK':
       const newTasksRemove = state.tasks.filter(task => task.id !== action.payload);
       storage.set(STORAGE_KEYS.TASKS, newTasksRemove);
-      return { ...state, tasks: newTasksRemove };
+      // Также убираем из закрепленных задач
+      const newPinnedTasksRemove = state.pinnedTasks.filter(id => id !== action.payload);
+      storage.set(STORAGE_KEYS.PINNED_TASKS, newPinnedTasksRemove);
+      return { ...state, tasks: newTasksRemove, pinnedTasks: newPinnedTasksRemove };
     case 'TOGGLE_THEME':
       const newTheme = state.theme === 'light' ? 'dark' : 'light';
       storage.set(STORAGE_KEYS.THEME, newTheme);
@@ -143,9 +149,13 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'SET_ACTIVE_MODULE':
       return { ...state, activeModule: action.payload };
     case 'ADD_NOTIFICATION':
-      return { ...state, notifications: [...state.notifications, action.payload] };
+      const newNotifications = [...state.notifications, action.payload];
+      storage.set('hrm_notifications', newNotifications);
+      return { ...state, notifications: newNotifications };
     case 'REMOVE_NOTIFICATION':
-      return { ...state, notifications: state.notifications.filter(n => n.id !== action.payload) };
+      const removedNotifications = state.notifications.filter(n => n.id !== action.payload);
+      storage.set('hrm_notifications', removedNotifications);
+      return { ...state, notifications: removedNotifications };
     case 'TOGGLE_FAVORITE_MODULE':
       const newFavorites = state.favoriteModules.includes(action.payload)
         ? state.favoriteModules.filter(m => m !== action.payload)
@@ -159,7 +169,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
       const newTasksPin = [newTask, ...state.tasks];
       storage.set(STORAGE_KEYS.TASKS, newTasksPin);
-      return { ...state, tasks: newTasksPin, pinnedTasks: [...state.pinnedTasks, action.payload] };
+      const newPinnedTasksPin = [...state.pinnedTasks, newTask.id];
+      storage.set(STORAGE_KEYS.PINNED_TASKS, newPinnedTasksPin);
+      return { ...state, tasks: newTasksPin, pinnedTasks: newPinnedTasksPin };
     case 'PIN_NOTIFICATION':
       const newPinnedNotifications = [...state.pinnedNotifications, action.payload];
       storage.set(STORAGE_KEYS.PINNED_NOTIFICATIONS, newPinnedNotifications);
@@ -168,6 +180,14 @@ function appReducer(state: AppState, action: AppAction): AppState {
       const unpinnedNotifications = state.pinnedNotifications.filter(id => id !== action.payload);
       storage.set(STORAGE_KEYS.PINNED_NOTIFICATIONS, unpinnedNotifications);
       return { ...state, pinnedNotifications: unpinnedNotifications };
+    case 'PIN_TASK':
+      const newPinnedTasks = [...state.pinnedTasks, action.payload];
+      storage.set(STORAGE_KEYS.PINNED_TASKS, newPinnedTasks);
+      return { ...state, pinnedTasks: newPinnedTasks };
+    case 'UNPIN_TASK':
+      const unpinnedTasks = state.pinnedTasks.filter(id => id !== action.payload);
+      storage.set(STORAGE_KEYS.PINNED_TASKS, unpinnedTasks);
+      return { ...state, pinnedTasks: unpinnedTasks };
     case 'SET_SELECTED_WIDGETS':
       storage.set(STORAGE_KEYS.SELECTED_WIDGETS, action.payload);
       return { ...state, selectedWidgetIds: action.payload };
@@ -194,6 +214,8 @@ interface AppContextType {
     setSelectedTheme: (theme: string) => void;
     setSelectedAccent: (accent: string) => void;
     applyThemeAndAccent: (theme: string, accent: string) => void;
+    saveAllData: () => void;
+    testStorage: () => boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -215,16 +237,41 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const [state, dispatch] = useReducer(appReducer, initialState);
     const [selectedWidgetIds, setSelectedWidgetIdsState] = useState<string[]>(initialState.selectedWidgetIds);
     const [toasts, setToasts] = useState<ToastMessage[]>([]);
-    const [tasks, setTasks] = useState<ToastMessage[]>([
-        {
-            id: 1,
-            message: 'Новое сообщение от HR-отдела',
-            type: 'message',
-            title: 'Новое сообщение'
-        }
-    ]);
+    const [tasks, setTasks] = useState<ToastMessage[]>(storage.get(STORAGE_KEYS.MINIMIZED_NOTIFICATIONS) || []);
     const [selectedTheme, setSelectedTheme] = useState('auto');
     const [selectedAccent, setSelectedAccent] = useState('primary');
+
+    // Функция для принудительного сохранения всех данных
+    const saveAllData = useCallback(() => {
+        storage.set(STORAGE_KEYS.TASKS, state.tasks);
+        storage.set(STORAGE_KEYS.PINNED_TASKS, state.pinnedTasks);
+        storage.set(STORAGE_KEYS.PINNED_NOTIFICATIONS, state.pinnedNotifications);
+        storage.set(STORAGE_KEYS.MINIMIZED_NOTIFICATIONS, tasks);
+        storage.set('hrm_notifications', state.notifications);
+        storage.set(STORAGE_KEYS.FAVORITE_MODULES, state.favoriteModules);
+        storage.set(STORAGE_KEYS.SELECTED_WIDGETS, selectedWidgetIds);
+        storage.set(STORAGE_KEYS.THEME, state.theme);
+        storage.set(STORAGE_KEYS.LANGUAGE, state.language);
+    }, [state, tasks, selectedWidgetIds]);
+
+    // Сохраняем данные при каждом изменении состояния
+    useEffect(() => {
+        saveAllData();
+    }, [saveAllData]);
+
+    // Автоматически закрепляем тестовое уведомление только если нет сохраненных
+    useEffect(() => {
+        if (tasks.length === 0 && state.pinnedNotifications.length === 0) {
+            const testNotification: ToastMessage = {
+                id: Date.now(),
+                message: 'Тестовое уведомление для трея',
+                type: 'info',
+                title: 'Тестовое уведомление'
+            };
+            setTasks([testNotification]);
+            dispatch({ type: 'PIN_NOTIFICATION', payload: testNotification.id });
+        }
+    }, [tasks.length, state.pinnedNotifications.length, dispatch]);
 
     useEffect(() => {
         storage.set(STORAGE_KEYS.MINIMIZED_NOTIFICATIONS, tasks);
@@ -401,7 +448,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         selectedAccent,
         setSelectedTheme,
         setSelectedAccent,
-        applyThemeAndAccent
+        applyThemeAndAccent,
+        saveAllData,
+        testStorage: () => {
+            try {
+                const testData = { test: 'data', timestamp: Date.now() };
+                storage.set('test_key', testData);
+                const retrieved = storage.get('test_key');
+                storage.remove('test_key');
+                return JSON.stringify(retrieved) === JSON.stringify(testData);
+            } catch {
+                return false;
+            }
+        }
     };
 
     return (

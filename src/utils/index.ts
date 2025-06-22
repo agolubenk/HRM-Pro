@@ -28,6 +28,24 @@ export const storage = {
     } catch {
       return false;
     }
+  },
+
+  clear: () => {
+    try {
+      localStorage.clear();
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  // Функция для тестирования сохранения
+  test: () => {
+    const testData = { test: 'data', timestamp: Date.now() };
+    storage.set('test_key', testData);
+    const retrieved = storage.get('test_key');
+    storage.remove('test_key');
+    return JSON.stringify(retrieved) === JSON.stringify(testData);
   }
 };
 

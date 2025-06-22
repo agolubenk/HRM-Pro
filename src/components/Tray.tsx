@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { Task, ToastMessage } from '../types';
 import './Tray.css';
 
 // Утилита для получения иконки по типу
@@ -25,35 +24,40 @@ interface TrayItem {
 }
 
 const Tray: React.FC = () => {
-    const { state, dispatch, tasks: contextTasks, closeTask, restoreTask } = useAppContext();
-    const { tasks: stateTasks, pinnedNotifications, language } = state;
+    const { state, dispatch, tasks: contextTasks, closeTask, restoreTask, saveAllData, testStorage } = useAppContext();
+    const { tasks: stateTasks, pinnedNotifications, pinnedTasks, language } = state;
 
-    // 1. Унификация всех элементов для трея из контекста приложения
+    // Унификация всех элементов для трея
     const pinnedItems = useMemo((): TrayItem[] => {
         const truncate = (text: string, length = 35) => 
             text.length > length ? text.substring(0, length - 1) + '…' : text;
 
-        // Задачи (включая статьи и встречи, определяются по префиксу)
-        const taskItems: TrayItem[] = stateTasks.map(task => {
-            let itemType: 'task' | 'article' | 'meeting' = 'task';
-            let displayText = task.text;
-            
-            if (task.text.startsWith('Статья:')) {
-                itemType = 'article';
-                displayText = task.text.replace('Статья:', '').trim();
-            } else if (task.text.startsWith('Встреча:')) {
-                itemType = 'meeting';
-                displayText = task.text.replace('Встреча:', '').trim();
-            }
-            
-            return {
-                id: task.id,
-                type: itemType,
-                text: truncate(displayText),
-                icon: getItemIcon(itemType),
-                originalItem: task,
-            };
-        });
+        // Закрепленные задачи
+        const taskItems: TrayItem[] = pinnedTasks
+            .map((id): TrayItem | null => {
+                const task = stateTasks.find(t => t.id === id);
+                if (!task) return null;
+                
+                let itemType: 'task' | 'article' | 'meeting' = 'task';
+                let displayText = task.text;
+                
+                if (task.text.startsWith('Статья:')) {
+                    itemType = 'article';
+                    displayText = task.text.replace('Статья:', '').trim();
+                } else if (task.text.startsWith('Встреча:')) {
+                    itemType = 'meeting';
+                    displayText = task.text.replace('Встреча:', '').trim();
+                }
+                
+                return {
+                    id: task.id,
+                    type: itemType,
+                    text: truncate(displayText),
+                    icon: getItemIcon(itemType),
+                    originalItem: task,
+                };
+            })
+            .filter((item): item is TrayItem => item !== null);
 
         // Закрепленные уведомления
         const notificationItems: TrayItem[] = pinnedNotifications
@@ -69,14 +73,11 @@ const Tray: React.FC = () => {
             })
             .filter((item): item is TrayItem => item !== null);
 
-        // TODO: Добавить сюда логику для закрепленных модулей, когда она будет реализована
-        
         const allItems = [...taskItems, ...notificationItems];
         return allItems.sort((a, b) => (b.id as number) - (a.id as number));
-    }, [stateTasks, pinnedNotifications, contextTasks]);
+    }, [stateTasks, pinnedNotifications, pinnedTasks, contextTasks]);
 
     const [isDropdownVisible, setDropdownVisible] = useState(false);
-    
     const trayRef = useRef<HTMLElement>(null);
     const moreButtonRef = useRef<HTMLButtonElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -88,28 +89,17 @@ const Tray: React.FC = () => {
         const container = trayRef.current;
         if (!container) return;
 
-        const measureContainer = document.createElement('div');
-        measureContainer.className = 'tray-measure-container';
-        document.body.appendChild(measureContainer);
-
-        const widths = pinnedItems.map(item => {
-            const el = document.createElement('button');
-            el.className = 'tray-badge';
-            el.innerHTML = `<i class="bi ${item.icon}"></i> <span>${item.text}</span> <button class="tray-badge-close">×</button>`;
-            measureContainer.appendChild(el);
-            return el.offsetWidth;
-        });
-
-        document.body.removeChild(measureContainer);
-
         const containerWidth = container.offsetWidth;
         const moreButtonWidth = 80; 
         const gap = 4;
         let currentWidth = 0;
         let visibleCount = 0;
 
+        // Простой расчет без измерения элементов
+        const estimatedItemWidth = 200; // Примерная ширина элемента
+
         for (let i = 0; i < pinnedItems.length; i++) {
-            const itemWidth = widths[i] + gap;
+            const itemWidth = estimatedItemWidth + gap;
             if (currentWidth + itemWidth < containerWidth - moreButtonWidth) {
                 currentWidth += itemWidth;
                 visibleCount++;
@@ -120,7 +110,6 @@ const Tray: React.FC = () => {
         
         setVisibleItems(pinnedItems.slice(0, visibleCount));
         setHiddenItems(pinnedItems.slice(visibleCount));
-
     }, [pinnedItems]);
 
     useEffect(() => {
@@ -131,17 +120,6 @@ const Tray: React.FC = () => {
         }
         return () => observer.disconnect();
     }, [calculateLayout]);
-
-    // Эффект для авто-прокрутки дропдауна вниз
-    useEffect(() => {
-        if (isDropdownVisible && dropdownRef.current) {
-            const dropdown = dropdownRef.current;
-            // Даем браузеру отрисовать элемент перед прокруткой
-            requestAnimationFrame(() => {
-                dropdown.scrollTop = dropdown.scrollHeight;
-            });
-        }
-    }, [isDropdownVisible]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -164,21 +142,29 @@ const Tray: React.FC = () => {
     const handleRemoveItem = (item: TrayItem, e: React.MouseEvent) => {
         e.stopPropagation();
         if (item.type === 'task' || item.type === 'article' || item.type === 'meeting') {
-            dispatch({ type: 'REMOVE_TASK', payload: item.id as number });
+            dispatch({ type: 'UNPIN_TASK', payload: item.id as number });
         } else if (item.type === 'notification') {
-            closeTask(item.id as number); // Закрывает тост, если он еще открыт
+            closeTask(item.id as number);
             dispatch({ type: 'UNPIN_NOTIFICATION', payload: item.id as number });
         }
+        // Принудительно сохраняем данные после изменения
+        setTimeout(saveAllData, 100);
     };
 
     const handleRestoreItem = (item: TrayItem) => {
-        // При клике на уведомление в трее - восстанавливаем его
         if (item.type === 'notification') {
             restoreTask(item.id as number);
-            // Можно также убирать из трея после восстановления
             dispatch({ type: 'UNPIN_NOTIFICATION', payload: item.id as number });
+        } else if (item.type === 'task' || item.type === 'article' || item.type === 'meeting') {
+            dispatch({ type: 'UNPIN_TASK', payload: item.id as number });
         }
-        // TODO: Добавить логику для клика по другим типам элементов
+        // Принудительно сохраняем данные после изменения
+        setTimeout(saveAllData, 100);
+    };
+
+    const handleTestStorage = () => {
+        const isWorking = testStorage();
+        alert(`Тест localStorage: ${isWorking ? '✅ Работает' : '❌ Не работает'}`);
     };
 
     if (pinnedItems.length === 0) {
@@ -186,6 +172,9 @@ const Tray: React.FC = () => {
             <footer className="tray-empty">
                 <span className="text-muted">© Иван Голубенко, 2023–2024 | HRM Pro v1.0</span>
                 <span className="text-muted">{language === 'ru' ? '🇷🇺 Русский' : '🇬🇧 English'}</span>
+                <button onClick={handleTestStorage} style={{ fontSize: '0.8rem', padding: '0.2rem 0.5rem' }}>
+                    Тест сохранения
+                </button>
             </footer>
         );
     }
