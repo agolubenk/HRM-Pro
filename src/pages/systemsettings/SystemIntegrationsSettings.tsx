@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import './SystemSettings.css';
+import AddIntegrationModal from './AddIntegrationModal';
 
-// Типы данных
-interface Integration {
+export interface Integration {
   id: string;
   name: string;
   description: string;
@@ -15,7 +15,7 @@ interface Integration {
 }
 
 // Моковые данные
-const allIntegrations: Integration[] = [
+const allIntegrationsData: Integration[] = [
     { id: '1c', name: '1С:Предприятие', description: 'Синхронизация кадровых данных и зарплат', icon: 'bi-calculator-fill', status: 'active', category: 'HR & Payroll', lastSync: '2024-06-10 14:30', type: 'api' },
     { id: 'bitrix24', name: 'Bitrix24', description: 'Интеграция с корпоративным порталом', icon: 'bi-bounding-box', status: 'active', category: 'Collaboration', lastSync: '2024-06-10 13:45', type: 'api' },
     { id: 'email', name: 'SMTP Server', description: 'Отправка системных уведомлений и рассылок', icon: 'bi-envelope-at-fill', status: 'active', category: 'System', lastSync: '2024-06-10 12:00', type: 'smtp' },
@@ -24,34 +24,54 @@ const allIntegrations: Integration[] = [
     { id: 'workday', name: 'Workday HCM', description: 'Управление человеческим капиталом', icon: 'bi-people-fill', status: 'inactive', category: 'HR & Payroll', type: 'api' },
     { id: 'greenhouse', name: 'Greenhouse', description: 'Система отслеживания кандидатов (ATS)', icon: 'bi-person-plus-fill', status: 'active', category: 'Recruiting', lastSync: '2024-06-10 11:30', type: 'api' },
     { id: 'linkedin', name: 'LinkedIn Recruiter', description: 'Поиск и импорт кандидатов', icon: 'bi-linkedin', status: 'pending', category: 'Recruiting', type: 'oauth' },
-    { id: 'coursera', name: 'Coursera', description: 'Платформа для корпоративного обучения', icon: 'bi-mortarboard-fill', status: 'active', category: 'L&D', lastSync: '2024-06-10 16:20', type: 'api' },
-    { id: 'okta', name: 'Okta', description: 'Управление доступом и SSO', icon: 'bi-shield-lock-fill', status: 'active', category: 'System', lastSync: '2024-06-10 07:30', type: 'oauth' },
-    { id: 'salesforce', name: 'Salesforce', description: 'Интеграция с CRM для данных о продажах', icon: 'bi-cloud-fill', status: 'inactive', category: 'Collaboration', type: 'api' },
-    { id: 'toggl', name: 'Toggl Track', description: 'Учет рабочего времени сотрудников', icon: 'bi-clock-history', status: 'active', category: 'Productivity', lastSync: '2024-06-10 17:00', type: 'api' },
-    { id: 'slack', name: 'Slack', description: 'Уведомления и совместная работа', icon: 'bi-slack', status: 'pending', category: 'Collaboration', type: 'webhook' },
-    { id: 'hh', name: 'HeadHunter', description: 'Импорт откликов на вакансии', icon: 'bi-briefcase-fill', status: 'error', category: 'Recruiting', lastSync: '2024-06-10 10:00', type: 'api'},
-    { id: 'postgres', name: 'PostgreSQL DB', description: 'Подключение к базе данных аналитики', icon: 'bi-database-fill-gear', status: 'active', category: 'System', lastSync: '2024-06-10 17:30', type: 'database'}
 ];
 
-const categories = ['All', ...Array.from(new Set(allIntegrations.map(i => i.category)))];
+const marketplaceIntegrations: Integration[] = [
+    ...allIntegrationsData,
+    { id: 'coursera', name: 'Coursera', description: 'Платформа для корпоративного обучения', icon: 'bi-mortarboard-fill', status: 'inactive', category: 'L&D', type: 'api' },
+    { id: 'okta', name: 'Okta', description: 'Управление доступом и SSO', icon: 'bi-shield-lock-fill', status: 'inactive', category: 'System', type: 'oauth' },
+    { id: 'salesforce', name: 'Salesforce', description: 'Интеграция с CRM для данных о продажах', icon: 'bi-cloud-fill', status: 'inactive', category: 'Collaboration', type: 'api' },
+    { id: 'toggl', name: 'Toggl Track', description: 'Учет рабочего времени сотрудников', icon: 'bi-clock-history', status: 'inactive', category: 'Productivity', type: 'api' },
+    { id: 'slack', name: 'Slack', description: 'Уведомления и совместная работа', icon: 'bi-slack', status: 'inactive', category: 'Collaboration', type: 'webhook' },
+    { id: 'hh', name: 'HeadHunter', description: 'Импорт откликов на вакансии', icon: 'bi-briefcase-fill', status: 'inactive', category: 'Recruiting', type: 'api'},
+    { id: 'postgres', name: 'PostgreSQL DB', description: 'Подключение к базе данных аналитики', icon: 'bi-database-fill-gear', status: 'inactive', category: 'System', type: 'database'}
+];
+
+const categories = ['All', ...Array.from(new Set(allIntegrationsData.map(i => i.category)))];
 
 type StatusFilter = 'all' | 'active' | 'inactive' | 'error' | 'pending';
 
 const SystemIntegrationsSettings: React.FC = () => {
   const { addToast } = useAppContext();
-  const [integrations] = useState(allIntegrations);
+  const [integrations, setIntegrations] = useState(allIntegrationsData);
   const [filter, setFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleAction = (action: string, id: string) => {
+    if (action === 'add_new') {
+      setIsModalOpen(true);
+      return;
+    }
     const integrationName = integrations.find(i => i.id === id)?.name || 'новая интеграция';
     addToast(`Действие '${action}' для '${integrationName}'`, { type: 'info' });
   };
   
-  const handleCreateAction = (type: string) => {
-    addToast(`Создать интеграцию типа: ${type}`, { type: 'success' });
+  const handleAddIntegration = (integrationToAdd: Integration) => {
+    const newIntegration: Integration = {
+        ...integrationToAdd,
+        status: 'pending', // Новая интеграция всегда в статусе "в ожидании"
+    };
+    setIntegrations(prev => [...prev, newIntegration]);
+    setIsModalOpen(false);
+    addToast(`Интеграция '${integrationToAdd.name}' успешно добавлена.`, { type: 'success' });
   };
+
+  const availableIntegrations = useMemo(() => {
+    const installedIds = new Set(integrations.map(i => i.id));
+    return marketplaceIntegrations.filter(i => !installedIds.has(i.id));
+  }, [integrations]);
 
   const filteredIntegrations = useMemo(() => {
     return integrations
@@ -88,9 +108,10 @@ const SystemIntegrationsSettings: React.FC = () => {
   };
 
   return (
-    <div className="settings-page integrations-page">
-        <div className="settings-header">
-             <div className="settings-header-content">
+    <>
+      <div className="settings-page integrations-page">
+          <div className="settings-header">
+              <div className="settings-header-content">
                 <div className="settings-title">
                     <i className="bi bi-plug-fill"></i>
                     <div>
@@ -105,9 +126,9 @@ const SystemIntegrationsSettings: React.FC = () => {
                     <button className="btn btn-light"><i className="bi bi-life-preserver me-2"></i>Документация</button>
                 </div>
             </div>
-        </div>
-        
-        <div className="settings-content-wrapper">
+          </div>
+          
+          <div className="settings-content-wrapper">
             <div className="integrations-stats-v2">
                 {statCardsData.map(card => (
                     <div 
@@ -196,8 +217,15 @@ const SystemIntegrationsSettings: React.FC = () => {
                     );
                 })}
             </div>
-        </div>
-    </div>
+          </div>
+      </div>
+      <AddIntegrationModal 
+        show={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAdd={handleAddIntegration}
+        availableIntegrations={availableIntegrations}
+      />
+    </>
   );
 };
 
