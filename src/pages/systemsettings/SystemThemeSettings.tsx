@@ -1,13 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useAppContext } from '../../context/AppContext';
 import './SystemSettings.css';
-
-interface Theme {
-  key: string;
-  name: string;
-  icon: string;
-  description: string;
-  preview: string;
-}
 
 interface AccentColor {
   key: string;
@@ -15,30 +8,6 @@ interface AccentColor {
   color: string;
   preview: string;
 }
-
-const themes: Theme[] = [
-  { 
-    key: 'light', 
-    name: 'Светлая', 
-    icon: 'bi-sun', 
-    description: 'Классическая светлая тема для комфортной работы днём',
-    preview: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)'
-  },
-  { 
-    key: 'dark', 
-    name: 'Тёмная', 
-    icon: 'bi-moon', 
-    description: 'Современная тёмная тема для работы в условиях низкой освещённости',
-    preview: 'linear-gradient(135deg, #212529 0%, #343a40 100%)'
-  },
-  { 
-    key: 'auto', 
-    name: 'Авто', 
-    icon: 'bi-circle-half', 
-    description: 'Автоматическое переключение в зависимости от системных настроек',
-    preview: 'linear-gradient(135deg, #f8f9fa 0%, #212529 50%, #343a40 100%)'
-  }
-];
 
 const accentColors: AccentColor[] = [
   { key: 'primary', name: 'Синий', color: '#0d6efd', preview: '#0d6efd' },
@@ -52,29 +21,20 @@ const accentColors: AccentColor[] = [
 ];
 
 const SystemThemeSettings: React.FC = () => {
-  const [selectedTheme, setSelectedTheme] = useState('auto');
-  const [selectedAccent, setSelectedAccent] = useState('primary');
+  const { 
+    selectedAccent, 
+    setSelectedAccent, 
+    applyThemeAndAccent 
+  } = useAppContext();
+  
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
-  // Применяем тему для превью
-  useEffect(() => {
-    if (isPreviewMode) {
-      document.documentElement.setAttribute('data-bs-theme', selectedTheme);
-      document.documentElement.style.setProperty('--bs-primary', accentColors.find(c => c.key === selectedAccent)?.color || '#0d6efd');
-    }
-  }, [selectedTheme, selectedAccent, isPreviewMode]);
-
   const handleSave = () => {
-    // Применяем выбранную тему глобально
-    document.documentElement.setAttribute('data-bs-theme', selectedTheme);
-    document.documentElement.style.setProperty('--bs-primary', accentColors.find(c => c.key === selectedAccent)?.color || '#0d6efd');
-    
     // Сохраняем в localStorage
-    localStorage.setItem('selected-theme', selectedTheme);
     localStorage.setItem('selected-accent', selectedAccent);
     
     setIsPreviewMode(false);
-    console.log('Тема сохранена:', { theme: selectedTheme, accent: selectedAccent });
+    console.log('Акцентный цвет сохранен:', selectedAccent);
   };
 
   const handlePreview = () => {
@@ -82,13 +42,11 @@ const SystemThemeSettings: React.FC = () => {
   };
 
   const handleReset = () => {
-    setSelectedTheme('auto');
     setSelectedAccent('primary');
     setIsPreviewMode(false);
     
     // Возвращаем к исходным настройкам
-    document.documentElement.setAttribute('data-bs-theme', 'auto');
-    document.documentElement.style.setProperty('--bs-primary', '#0d6efd');
+    applyThemeAndAccent('auto', 'primary');
   };
 
   return (
@@ -100,19 +58,19 @@ const SystemThemeSettings: React.FC = () => {
             <h1>Внешний вид</h1>
           </div>
           <p className="settings-subtitle">
-            Настройте тему оформления и акцентные цвета для всей системы.
+            Настройте акцентные цвета и дополнительные параметры интерфейса.
           </p>
         </div>
       </div>
 
       <div className="settings-content-wrapper theme-content-compact">
         <div className="row g-3">
-          {/* Темы интерфейса */}
-          <div className="col-12 col-lg-4">
+          {/* Акцентные цвета */}
+          <div className="col-12 col-lg-6">
             <div className="settings-section theme-section-compact theme-section-standard">
               <div className="settings-section-header theme-header-compact">
-                <i className="bi bi-brightness-high"></i>
-                <h3>Тема интерфейса</h3>
+                <i className="bi bi-droplet-half"></i>
+                <h3>Акцентный цвет</h3>
                 <div className="settings-header-actions">
                   <button 
                     type="button" 
@@ -124,51 +82,6 @@ const SystemThemeSettings: React.FC = () => {
                     <span className="preview-text d-none d-sm-inline ms-1">{isPreviewMode ? 'Скрыть' : 'Превью'}</span>
                   </button>
                 </div>
-              </div>
-              
-              <div className="themes-grid themes-grid-compact themes-grid-standard">
-                {themes.map(theme => (
-                  <div
-                    key={theme.key}
-                    className={`theme-card theme-card-compact theme-card-standard ${selectedTheme === theme.key ? 'active' : ''}`}
-                    onClick={() => setSelectedTheme(theme.key)}
-                  >
-                    <div className="theme-preview theme-preview-compact theme-preview-standard" style={{ background: theme.preview }}>
-                      <div className="theme-preview-content theme-preview-content-compact">
-                        <div className="preview-header preview-header-compact"></div>
-                        <div className="preview-sidebar preview-sidebar-compact"></div>
-                        <div className="preview-main preview-main-compact">
-                          <div className="preview-card preview-card-compact"></div>
-                          <div className="preview-card preview-card-compact"></div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="theme-info theme-info-compact theme-info-standard">
-                      <div className="theme-icon theme-icon-compact">
-                        <i className={`bi ${theme.icon}`}></i>
-                      </div>
-                      <div className="theme-details theme-details-compact">
-                        <h5>{theme.name}</h5>
-                        <p className="theme-description-compact">{theme.description}</p>
-                      </div>
-                      {selectedTheme === theme.key && (
-                        <div className="theme-selected">
-                          <i className="bi bi-check-circle-fill"></i>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Акцентные цвета */}
-          <div className="col-12 col-lg-4">
-            <div className="settings-section theme-section-compact theme-section-standard">
-              <div className="settings-section-header theme-header-compact">
-                <i className="bi bi-droplet-half"></i>
-                <h3>Акцентный цвет</h3>
               </div>
               
               <div className="accent-colors-grid accent-colors-grid-compact accent-colors-grid-standard">
@@ -197,7 +110,7 @@ const SystemThemeSettings: React.FC = () => {
           </div>
 
           {/* Дополнительные настройки */}
-          <div className="col-12 col-lg-4">
+          <div className="col-12 col-lg-6">
             <div className="settings-section theme-section-compact theme-section-standard">
               <div className="settings-section-header theme-header-compact">
                 <i className="bi bi-sliders"></i>
@@ -257,6 +170,20 @@ const SystemThemeSettings: React.FC = () => {
                       <option value="auto" selected>Авто</option>
                       <option value="compact">Компактная</option>
                       <option value="spacious">Просторная</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="setting-item">
+                  <div className="setting-icon">
+                    <i className="bi bi-brightness-high"></i>
+                  </div>
+                  <div className="setting-content">
+                    <label className="setting-label">Тема интерфейса</label>
+                    <select className="form-select form-select-compact setting-select">
+                      <option value="auto" selected>Авто</option>
+                      <option value="light">Светлая</option>
+                      <option value="dark">Тёмная</option>
                     </select>
                   </div>
                 </div>

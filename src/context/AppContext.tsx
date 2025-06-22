@@ -11,6 +11,8 @@ export const STORAGE_KEYS = {
     SELECTED_WIDGETS: 'hrm_selected_widgets',
     PINNED_NOTIFICATIONS: 'hrm_pinned_notifications',
     MINIMIZED_NOTIFICATIONS: 'hrm_minimized_notifications',
+    SELECTED_THEME: 'selected-theme',
+    SELECTED_ACCENT: 'selected-accent',
 };
 
 type Theme = 'light' | 'dark';
@@ -34,6 +36,7 @@ type AppAction =
   | { type: 'ADD_TASK'; payload: Task }
   | { type: 'REMOVE_TASK'; payload: number }
   | { type: 'TOGGLE_THEME' }
+  | { type: 'SET_THEME'; payload: Theme }
   | { type: 'CHANGE_LANGUAGE'; payload: Language }
   | { type: 'TOGGLE_QUICK_PANEL' }
   | { type: 'SET_QUICK_PANEL'; payload: boolean }
@@ -125,6 +128,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
       const newTheme = state.theme === 'light' ? 'dark' : 'light';
       storage.set(STORAGE_KEYS.THEME, newTheme);
       return { ...state, theme: newTheme };
+    case 'SET_THEME':
+      storage.set(STORAGE_KEYS.THEME, action.payload);
+      return { ...state, theme: action.payload };
     case 'CHANGE_LANGUAGE':
       storage.set(STORAGE_KEYS.LANGUAGE, action.payload);
       return { ...state, language: action.payload };
@@ -183,6 +189,11 @@ interface AppContextType {
     pinToast: (toastId: number) => void;
     restoreTask: (taskId: number) => void;
     closeTask: (taskId: number) => void;
+    selectedTheme: string;
+    selectedAccent: string;
+    setSelectedTheme: (theme: string) => void;
+    setSelectedAccent: (accent: string) => void;
+    applyThemeAndAccent: (theme: string, accent: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -202,31 +213,18 @@ const getDefaultTitle = (type: ToastType): string => {
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [state, dispatch] = useReducer(appReducer, initialState);
-    const [selectedWidgetIds, setSelectedWidgetIdsState] = useState<string[]>(state.selectedWidgetIds);
+    const [selectedWidgetIds, setSelectedWidgetIdsState] = useState<string[]>(initialState.selectedWidgetIds);
     const [toasts, setToasts] = useState<ToastMessage[]>([]);
-    const [tasks, setTasks] = useState<ToastMessage[]>(() => storage.get(STORAGE_KEYS.MINIMIZED_NOTIFICATIONS) || [
+    const [tasks, setTasks] = useState<ToastMessage[]>([
         {
             id: 1,
-            title: 'Новое сообщение от HR-директора',
-            message: 'Пожалуйста, подготовьте отчет по текучести кадров до конца недели.',
+            message: 'Новое сообщение от HR-отдела',
             type: 'message',
-            timestamp: Date.now() - 3600000
-        },
-        {
-            id: 2,
-            title: 'Напоминание о встрече',
-            message: 'Через 30 минут начинается еженедельная планерка HR-отдела.',
-            type: 'calendar',
-            timestamp: Date.now() - 1800000
-        },
-        {
-            id: 3,
-            title: 'Новая задача',
-            message: 'Вам назначена задача: "Провести интервью с кандидатом на позицию Senior Developer".',
-            type: 'task',
-            timestamp: Date.now() - 900000
+            title: 'Новое сообщение'
         }
     ]);
+    const [selectedTheme, setSelectedTheme] = useState('auto');
+    const [selectedAccent, setSelectedAccent] = useState('primary');
 
     useEffect(() => {
         storage.set(STORAGE_KEYS.MINIMIZED_NOTIFICATIONS, tasks);
@@ -275,6 +273,117 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         dispatch({ type: 'UNPIN_NOTIFICATION', payload: taskId });
     };
 
+    // Функция для конвертации HEX в RGB
+    const hexToRgb = useCallback((hex: string): string => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '13, 110, 253';
+    }, []);
+
+    // Функция для конвертации HEX в HSL
+    const hexToHsl = useCallback((hex: string): { h: number; s: number; l: number } | null => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        if (!result) return null;
+        
+        const r = parseInt(result[1], 16) / 255;
+        const g = parseInt(result[2], 16) / 255;
+        const b = parseInt(result[3], 16) / 255;
+        
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        let h = 0, s = 0, l = (max + min) / 2;
+        
+        if (max !== min) {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+        
+        return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+    }, []);
+
+    // Функция для затемнения цвета
+    const darkenColor = useCallback((hex: string, percent: number): string => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        if (!result) return hex;
+        
+        const r = Math.max(0, parseInt(result[1], 16) - Math.round(255 * percent / 100));
+        const g = Math.max(0, parseInt(result[2], 16) - Math.round(255 * percent / 100));
+        const b = Math.max(0, parseInt(result[3], 16) - Math.round(255 * percent / 100));
+        
+        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    }, []);
+
+    // Применяем тему и акцентный цвет ко всему приложению
+    const applyThemeAndAccent = useCallback((theme: string, accent: string) => {
+        // Определяем акцентный цвет
+        const accentColors = [
+            { key: 'primary', color: '#0d6efd' },
+            { key: 'success', color: '#198754' },
+            { key: 'danger', color: '#dc3545' },
+            { key: 'warning', color: '#fd7e14' },
+            { key: 'info', color: '#0dcaf0' },
+            { key: 'purple', color: '#6f42c1' },
+            { key: 'pink', color: '#d63384' },
+            { key: 'teal', color: '#20c997' }
+        ];
+        
+        const accentColor = accentColors.find(c => c.key === accent)?.color || '#0d6efd';
+        
+        // Основные цвета Bootstrap
+        document.documentElement.style.setProperty('--bs-primary', accentColor);
+        document.documentElement.style.setProperty('--bs-primary-rgb', hexToRgb(accentColor));
+        
+        // Дополнительные цвета на основе акцентного
+        const hsl = hexToHsl(accentColor);
+        if (hsl) {
+            // Создаем вариации акцентного цвета
+            document.documentElement.style.setProperty('--bs-primary-subtle', `hsl(${hsl.h}, ${hsl.s}%, 95%)`);
+            document.documentElement.style.setProperty('--bs-primary-bg-subtle', `hsl(${hsl.h}, ${hsl.s}%, 97%)`);
+            document.documentElement.style.setProperty('--bs-primary-border-subtle', `hsl(${hsl.h}, ${hsl.s}%, 85%)`);
+        }
+        
+        // Применяем к кнопкам и другим элементам
+        document.documentElement.style.setProperty('--bs-btn-primary-bg', accentColor);
+        document.documentElement.style.setProperty('--bs-btn-primary-border-color', accentColor);
+        document.documentElement.style.setProperty('--bs-btn-primary-hover-bg', darkenColor(accentColor, 10));
+        document.documentElement.style.setProperty('--bs-btn-primary-hover-border-color', darkenColor(accentColor, 10));
+        
+        // Применяем к ссылкам
+        document.documentElement.style.setProperty('--bs-link-color', accentColor);
+        document.documentElement.style.setProperty('--bs-link-hover-color', darkenColor(accentColor, 15));
+        
+        // Применяем к фокусам
+        document.documentElement.style.setProperty('--bs-focus-ring-color', `${accentColor}40`);
+    }, [hexToRgb, hexToHsl, darkenColor]);
+
+    // Загружаем сохраненные настройки при монтировании
+    useEffect(() => {
+        const savedTheme = localStorage.getItem(STORAGE_KEYS.SELECTED_THEME) || 'auto';
+        const savedAccent = localStorage.getItem(STORAGE_KEYS.SELECTED_ACCENT) || 'primary';
+        
+        setSelectedTheme(savedTheme);
+        setSelectedAccent(savedAccent);
+        
+        // Применяем сохраненные настройки
+        applyThemeAndAccent(savedTheme, savedAccent);
+    }, [applyThemeAndAccent]);
+
+    // Применяем тему при изменении
+    useEffect(() => {
+        applyThemeAndAccent(selectedTheme, selectedAccent);
+    }, [selectedTheme, selectedAccent, applyThemeAndAccent]);
+
+    // Применяем тему из state при изменении
+    useEffect(() => {
+        document.documentElement.setAttribute('data-bs-theme', state.theme);
+    }, [state.theme]);
+
     const contextValue: AppContextType = {
         state,
         dispatch,
@@ -287,12 +396,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         minimizeToast,
         pinToast,
         restoreTask,
-        closeTask
+        closeTask,
+        selectedTheme,
+        selectedAccent,
+        setSelectedTheme,
+        setSelectedAccent,
+        applyThemeAndAccent
     };
-
-    React.useEffect(() => {
-        document.documentElement.setAttribute('data-bs-theme', state.theme);
-    }, [state.theme]);
 
     return (
         <AppContext.Provider value={contextValue}>
