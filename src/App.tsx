@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import './App.css';
 import {
   createBrowserRouter,
@@ -12,21 +12,30 @@ import { moduleSubmenus } from './constants';
 import ErrorPage from './pages/ErrorPage';
 import LoginPage from './pages/LoginPage';
 import ModuleGrid from './components/ModuleGrid';
-import ActivityLogPage from './pages/ActivityLogPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import NewPasswordPage from './pages/NewPasswordPage';
 import ToastContainer from './components/ToastContainer';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import SystemSettingsPage from './pages/systemsettings/SystemSettingsPage';
-import LanguageSwitcher from './components/LanguageSwitcher';
-import { I18nextProvider } from 'react-i18next';
 import QuickPanel from './components/QuickPanel';
 import FloatingActions from './components/FloatingActions';
 import ModuleSubmenu from './components/ModuleSubmenu';
 import CommandCenter from './components/CommandCenter';
 import StatWidgets from './components/StatWidgets';
 import Tray from './components/Tray';
+
+// Lazy loading для страниц, которые не загружаются сразу
+const ActivityLogPage = lazy(() => import('./pages/ActivityLogPage'));
+
+// Компонент загрузки
+const LoadingSpinner = () => (
+  <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
+    <div className="spinner-border text-primary" role="status">
+      <span className="visually-hidden">Загрузка...</span>
+    </div>
+  </div>
+);
 
 // Компонент-обертка для главной страницы
 const MainPage = () => {
@@ -99,7 +108,11 @@ const router = createBrowserRouter([
       },
       {
         path: "/account/activity-log",
-        element: <ActivityLogPage />
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <ActivityLogPage />
+          </Suspense>
+        )
       },
       {
         path: "/401",
@@ -143,9 +156,7 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <React.StrictMode>
-      <AppWithProviders />
-    </React.StrictMode>
+    <AppWithProviders />
   );
 }
 

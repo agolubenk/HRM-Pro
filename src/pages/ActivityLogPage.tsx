@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import * as XLSX from 'xlsx'; // Import xlsx library
 import './ActivityLogPage.css';
 import { useAppContext } from '../context/AppContext';
 
@@ -53,6 +52,9 @@ const ActivityLogPage: React.FC = () => {
     
     // State for selected rows in the table
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+    
+    // State for Excel export loading
+    const [isExporting, setIsExporting] = useState(false);
 
     // State for filters
     const [filterDate, setFilterDate] = useState('');
@@ -111,30 +113,43 @@ const ActivityLogPage: React.FC = () => {
         }
     };
 
-    const handleDownloadExcel = () => {
-        // Prepare data for worksheet
-        const dataForSheet = filteredLogs.map(log => ({
-            'Дата и время': log.date,
-            'Действие': log.action,
-            'Результат': log.statusText,
-            'IP / Устройство': log.ip
-        }));
+    const handleDownloadExcel = async () => {
+        setIsExporting(true);
+        try {
+            // Динамический импорт xlsx только при необходимости
+            const XLSX = await import('xlsx');
+            
+            // Prepare data for worksheet
+            const dataForSheet = filteredLogs.map(log => ({
+                'Дата и время': log.date,
+                'Действие': log.action,
+                'Результат': log.statusText,
+                'IP / Устройство': log.ip
+            }));
 
-        // Create a new workbook and a worksheet
-        const ws = XLSX.utils.json_to_sheet(dataForSheet);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Логи Активности");
+            // Create a new workbook and a worksheet
+            const ws = XLSX.utils.json_to_sheet(dataForSheet);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Логи Активности");
 
-        // Set column widths for better readability
-        ws['!cols'] = [
-            { wch: 20 }, // Date
-            { wch: 30 }, // Action
-            { wch: 10 }, // Result
-            { wch: 40 }  // IP / Device
-        ];
+            // Set column widths for better readability
+            ws['!cols'] = [
+                { wch: 20 }, // Date
+                { wch: 30 }, // Action
+                { wch: 10 }, // Result
+                { wch: 40 }  // IP / Device
+            ];
 
-        // Trigger the download
-        XLSX.writeFile(wb, "activity_log.xlsx");
+            // Trigger the download
+            XLSX.writeFile(wb, "activity_log.xlsx");
+            
+            addToast('Файл Excel успешно скачан', { type: 'success', title: 'Экспорт' });
+        } catch (error) {
+            console.error('Ошибка при экспорте в Excel:', error);
+            addToast('Не удалось экспортировать файл Excel', { type: 'error', title: 'Ошибка экспорта' });
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     const handleToggleAllRows = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -328,8 +343,20 @@ const ActivityLogPage: React.FC = () => {
                             </button>
                         )}
                         {activeTab !== 'terminal' && (
-                            <button className="btn-excel" title="Скачать в формате Excel" onClick={handleDownloadExcel}>
-                                <i className="bi bi-file-earmark-excel"></i>
+                            <button 
+                                className="btn-excel" 
+                                title="Скачать в формате Excel" 
+                                onClick={handleDownloadExcel}
+                                disabled={isExporting}
+                            >
+                                {isExporting ? (
+                                    <>
+                                        <i className="bi bi-arrow-clockwise spin"></i>
+                                        <span className="ms-1">Экспорт...</span>
+                                    </>
+                                ) : (
+                                    <i className="bi bi-file-earmark-excel"></i>
+                                )}
                             </button>
                         )}
                     </div>
