@@ -3,6 +3,12 @@
   min-height: 100vh;
   background: var(--bs-body-bg);
   padding-bottom: 120px;
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+[data-bs-theme="dark"] .settings-page {
+  background-color: var(--bs-dark);
 }
 
 /* Заголовок страницы */
@@ -2029,6 +2035,7 @@
   position: sticky;
   top: 2rem;
   align-self: start;
+  padding-right: 0;
 }
 
 .settings-stats-list {
@@ -2078,55 +2085,602 @@
   --bs-btn-border-color: var(--bs-border-color);
 }
 
-/* Специальные стили для страницы безопасности - более компактные поля */
-.settings-section .form-control-sm {
-  padding: 0.25rem 0.5rem; /* Еще меньше padding */
-  font-size: 0.875rem;
-  min-height: 28px; /* Уменьшенная минимальная высота */
-  border-radius: 8px; /* Меньший радиус для компактности */
+/* Стили для страницы интеграций */
+.integrations-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.settings-section .form-control {
-  padding: 0.375rem 0.75rem; /* Уменьшенный padding для обычных полей */
+.integrations-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.integrations-title .icon-wrapper {
+  width: 3rem;
+  height: 3rem;
+  background: var(--bs-primary-bg-subtle);
+  color: var(--bs-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 1.5rem;
+}
+
+.integrations-title h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.integrations-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.integrations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.integration-card {
+  background: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+.integration-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.integration-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.integration-icon {
+  font-size: 1.5rem;
+  width: 3rem;
+  height: 3rem;
+  background: var(--bs-secondary-bg);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.integration-title {
+  flex: 1;
+}
+
+.integration-title h5 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.integration-title p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--bs-secondary-color);
+}
+
+.integration-card-body {
   font-size: 0.9rem;
-  min-height: 32px;
-  border-radius: 10px;
+  color: var(--bs-body-color);
+  margin-bottom: 1.5rem;
+  flex: 1;
 }
 
-.settings-section textarea.form-control {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.9rem;
-  min-height: 60px; /* Уменьшенная высота для textarea */
-  resize: vertical;
-}
-
-/* Компактные поля для числовых значений */
-.settings-section input[type="number"].form-control-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
-  min-height: 28px;
-  width: 80px;
-  text-align: center;
-}
-
-/* Компактные переключатели */
-.settings-section .form-check-input {
-  width: 1.2em;
-  height: 1.2em;
-  margin-top: 0.1em;
-}
-
-.settings-section .form-check-label {
-  font-size: 0.9rem;
-  padding-left: 0.5rem;
-}
-
-/* Компактные группы форм */
-.settings-section .form-group {
-  /* Убрали margin-bottom, чтобы избежать двойного отступа, т.к. используется gap в .settings-form */
-}
-
-.settings-section .form-text {
+.integration-meta {
+  display: flex;
+  justify-content: space-between;
   font-size: 0.8rem;
-  margin-top: 0.25rem;
+  color: var(--bs-secondary-color);
+  padding: 1rem 0;
+  border-top: 1px solid var(--bs-border-color);
+  border-bottom: 1px solid var(--bs-border-color);
+  margin-bottom: 1rem;
+}
+
+.integration-meta .meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.integration-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.integration-card-footer .btn-group .btn {
+  font-size: 0.8rem;
+}
+
+.badge.status-active {
+  background-color: var(--bs-success-bg-subtle);
+  color: var(--bs-success-text-emphasis);
+  border: 1px solid var(--bs-success-border-subtle);
+}
+
+.badge.status-inactive {
+  background-color: var(--bs-secondary-bg-subtle);
+  color: var(--bs-secondary-text-emphasis);
+  border: 1px solid var(--bs-secondary-border-subtle);
+}
+
+.badge.status-error {
+  background-color: var(--bs-danger-bg-subtle);
+  color: var(--bs-danger-text-emphasis);
+  border: 1px solid var(--bs-danger-border-subtle);
+}
+
+.badge.status-pending {
+  background-color: var(--bs-warning-bg-subtle);
+  color: var(--bs-warning-text-emphasis);
+  border: 1px solid var(--bs-warning-border-subtle);
+}
+
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+}
+
+.type-icon {
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  background: var(--bs-tertiary-bg);
+  color: var(--bs-tertiary-color);
+  font-size: 0.75rem;
+  border: 1px solid var(--bs-border-color);
+}
+
+.create-integration-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border-style: dashed;
+  min-height: 200px;
+  cursor: pointer;
+  background: var(--bs-tertiary-bg);
+  transition: all 0.3s ease;
+}
+
+.create-integration-card:hover {
+  border-color: var(--bs-primary);
+  background-color: var(--bs-light);
+  color: var(--bs-primary);
+}
+
+.create-integration-card .create-integration-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+[data-bs-theme="dark"] .create-integration-card {
+  background: rgba(var(--bs-primary-rgb), 0.05);
+  border-color: var(--bs-border-color-translucent);
+  color: var(--bs-secondary-color);
+}
+
+[data-bs-theme="dark"] .create-integration-card:hover {
+  background-color: rgba(var(--bs-primary-rgb), 0.1);
+  color: var(--bs-primary);
+}
+
+.create-integration-card h5 {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.create-integration-card p {
+  font-size: 0.9rem;
+  color: var(--bs-secondary-color);
+}
+
+/* Stats Section */
+.integrations-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.2s ease-in-out;
+}
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--bs-box-shadow);
+}
+
+
+.stat-icon {
+  font-size: 1.75rem;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--bs-heading-color);
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--bs-secondary-color);
+}
+
+[data-bs-theme="dark"] .stat-card {
+    background: var(--bs-tertiary-bg);
+}
+
+/* Filter buttons */
+.integrations-filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+/* === Responsive === */
+@media (max-width: 992px) {
+  .integrations-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .settings-page {
+    padding: 1rem;
+  }
+  
+  .settings-content-wrapper {
+    padding: 1rem;
+  }
+
+  .filters-row-compact {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .integrations-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .integrations-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .integrations-filter-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* Стили для страницы Интеграций, соответствующие новому дизайну */
+.integrations-page {
+  background-color: var(--bs-gray-100);
+}
+[data-bs-theme="dark"] .integrations-page {
+    background-color: var(--bs-dark);
+}
+
+/* Статистика v2 */
+.integrations-stats-v2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.stat-card-v2 {
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.stat-card-v2:hover {
+    border-color: var(--bs-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--bs-box-shadow-sm);
+}
+.stat-card-v2.active {
+    border-color: #6967f5;
+    box-shadow: 0 0 0 2px rgba(105, 103, 245, 0.4);
+    transform: translateY(-2px);
+}
+[data-bs-theme="dark"] .stat-card-v2.active {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 2px var(--bs-primary);
+}
+.stat-card-v2-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    background-color: var(--icon-bg);
+    color: var(--icon-color);
+    flex-shrink: 0;
+}
+.stat-card-v2-info {
+    display: flex;
+    flex-direction: column;
+}
+.stat-card-v2-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+.stat-card-v2-label {
+    font-size: 0.8rem;
+    color: var(--bs-secondary-color);
+}
+
+/* Панель фильтров */
+.filters-panel {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+.search-bar {
+    position: relative;
+    flex-grow: 1;
+}
+.search-bar .form-control {
+    padding-left: 2.5rem;
+}
+.search-bar .bi-search {
+    position: absolute;
+    top: 50%;
+    left: 1rem;
+    transform: translateY(-50%);
+    color: var(--bs-secondary-color);
+}
+.category-filters {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding: 0.25rem 0;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.category-filters::-webkit-scrollbar {
+    display: none;
+}
+.category-filter-btn {
+    background: transparent;
+    border: none;
+    color: var(--bs-secondary-color);
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    font-weight: 500;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.category-filter-btn:hover {
+    color: var(--bs-body-color);
+    background-color: var(--bs-tertiary-bg);
+}
+.category-filter-btn.active {
+    background-color: #6967f5;
+    color: white;
+    font-weight: 500;
+}
+[data-bs-theme="dark"] .category-filter-btn {
+    color: var(--bs-tertiary-color);
+}
+[data-bs-theme="dark"] .category-filter-btn:hover {
+    color: var(--bs-light);
+    background-color: var(--bs-secondary-bg);
+}
+[data-bs-theme="dark"] .category-filter-btn.active {
+    background-color: var(--bs-primary);
+    color: var(--bs-primary-contrast);
+}
+
+/* Сетка интеграций v2 */
+.integrations-grid-v2 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+.integration-card-v2 {
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.card-v2-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.card-v2-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-secondary-color);
+}
+.card-v2-title {
+    flex-grow: 1;
+}
+.card-v2-title h6 {
+    margin: 0;
+    font-weight: 600;
+}
+.card-v2-title span {
+    font-size: 0.85rem;
+    color: var(--bs-secondary-color);
+}
+
+.card-v2-description {
+    font-size: 0.9rem;
+    color: var(--bs-secondary-color);
+    flex-grow: 1;
+    margin: 0;
+}
+
+.card-v2-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: var(--bs-secondary-color);
+}
+.card-v2-meta .bi {
+    margin-right: 0.5rem;
+}
+
+.card-v2-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-top: 1px solid var(--bs-border-color);
+    padding-top: 1rem;
+    margin-top: auto;
+}
+.card-action-btn {
+    background: none;
+    border: none;
+    color: var(--bs-secondary-color);
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+.card-action-btn:hover {
+    color: var(--bs-body-color);
+    background-color: var(--bs-secondary-bg);
+}
+.card-action-btn .bi {
+    margin-right: 0.25rem;
+}
+.card-v2-footer .dropdown {
+    margin-left: auto;
+}
+
+/* Статусы v2 */
+.badge.status-active-v2 { background-color: var(--bs-success-bg-subtle); color: var(--bs-success-text-emphasis); }
+.badge.status-inactive-v2 { background-color: var(--bs-secondary-bg-subtle); color: var(--bs-secondary-text-emphasis); }
+.badge.status-error-v2 { background-color: var(--bs-danger-bg-subtle); color: var(--bs-danger-text-emphasis); }
+.badge.status-pending-v2 { background-color: var(--bs-warning-bg-subtle); color: var(--bs-warning-text-emphasis); }
+
+/* Карточка добавления v2 */
+.add-card-v2 {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    border: 2px dashed var(--bs-border-color-translucent);
+    transition: all 0.2s ease;
+}
+.add-card-v2:hover {
+    border-color: var(--bs-primary);
+    background-color: var(--bs-primary-bg-subtle);
+    color: var(--bs-primary);
+}
+.add-card-v2-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--bs-secondary-bg);
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.add-card-v2 h6 { margin-top: 1rem; font-weight: 600; }
+.add-card-v2 p { color: var(--bs-secondary-color); }
+.add-card-v2:hover .add-card-v2-icon { background-color: var(--bs-primary); color: white; }
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+    .integrations-grid-v2 {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 992px) {
+    .integrations-stats-v2 {
+        grid-template-columns: 1fr;
+    }
+    .filters-panel {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 768px) {
+    .settings-page {
+        padding: 1rem;
+    }
+    .settings-content-wrapper {
+        padding: 1rem;
+        background: var(--bs-body-bg);
+    }
+    .integrations-grid-v2 {
+        grid-template-columns: 1fr;
+    }
+    .category-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .integrations-page {
+        background-color: var(--bs-body-bg);
+    }
 } 
