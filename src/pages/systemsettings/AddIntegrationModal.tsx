@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import './SystemSettings.css';
 import { Integration } from './SystemIntegrationsSettings';
 
@@ -10,6 +10,19 @@ interface AddIntegrationModalProps {
 }
 
 const AddIntegrationModal: React.FC<AddIntegrationModalProps> = ({ show, onClose, onAdd, availableIntegrations }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('All');
+
+  const categories = useMemo(() => {
+    return ['All', ...Array.from(new Set(availableIntegrations.map(i => i.category)))];
+  }, [availableIntegrations]);
+
+  const filteredMarketplace = useMemo(() => {
+    return availableIntegrations
+      .filter(i => categoryFilter === 'All' || i.category === categoryFilter)
+      .filter(i => i.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [availableIntegrations, categoryFilter, searchTerm]);
+
   if (!show) {
     return null;
   }
@@ -23,10 +36,27 @@ const AddIntegrationModal: React.FC<AddIntegrationModalProps> = ({ show, onClose
         </div>
         <div className="modal-body-v2">
           <div className="marketplace-filters">
-            <input type="text" placeholder="Поиск в маркетплейсе..." className="form-control" />
+            <input 
+              type="text" 
+              placeholder="Поиск в маркетплейсе..." 
+              className="form-control mb-3"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <div className="category-filters">
+              {categories.map(cat => (
+                <button
+                  key={cat}
+                  className={`category-filter-btn ${categoryFilter === cat ? 'active' : ''}`}
+                  onClick={() => setCategoryFilter(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="marketplace-grid">
-            {availableIntegrations.map(integ => (
+            {filteredMarketplace.map(integ => (
               <div key={integ.id} className="marketplace-card">
                 <div className="marketplace-card-header">
                   <i className={`bi ${integ.icon}`}></i>
@@ -39,6 +69,11 @@ const AddIntegrationModal: React.FC<AddIntegrationModalProps> = ({ show, onClose
                 </button>
               </div>
             ))}
+             {filteredMarketplace.length === 0 && (
+                <div className="marketplace-empty">
+                    <p>Ничего не найдено. Попробуйте изменить запрос.</p>
+                </div>
+            )}
           </div>
         </div>
       </div>

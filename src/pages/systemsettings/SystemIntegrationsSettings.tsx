@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import './SystemSettings.css';
 import AddIntegrationModal from './AddIntegrationModal';
+import SettingsIntegrationModal from './SettingsIntegrationModal';
 
 export interface Integration {
   id: string;
@@ -37,7 +38,7 @@ const marketplaceIntegrations: Integration[] = [
     { id: 'postgres', name: 'PostgreSQL DB', description: 'Подключение к базе данных аналитики', icon: 'bi-database-fill-gear', status: 'inactive', category: 'System', type: 'database'}
 ];
 
-const categories = ['All', ...Array.from(new Set(allIntegrationsData.map(i => i.category)))];
+const categories = ['All', ...Array.from(new Set(marketplaceIntegrations.map(i => i.category)))];
 
 type StatusFilter = 'all' | 'active' | 'inactive' | 'error' | 'pending';
 
@@ -47,26 +48,70 @@ const SystemIntegrationsSettings: React.FC = () => {
   const [filter, setFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
 
   const handleAction = (action: string, id: string) => {
-    if (action === 'add_new') {
-      setIsModalOpen(true);
-      return;
+    const integration = integrations.find(i => i.id === id);
+    
+    switch (action) {
+      case 'add_new':
+        setIsAddModalOpen(true);
+        break;
+      case 'settings':
+        if (integration) {
+          setSelectedIntegration(integration);
+          setIsSettingsModalOpen(true);
+        }
+        break;
+      case 'delete':
+        if (integration && window.confirm(`Вы уверены, что хотите удалить интеграцию "${integration.name}"?`)) {
+          setIntegrations(prev => prev.filter(i => i.id !== id));
+          addToast(`Интеграция "${integration.name}" удалена.`, { type: 'success' });
+        }
+        break;
+      default:
+        const integrationName = integration?.name || 'новая интеграция';
+        addToast(`Действие '${action}' для '${integrationName}'`, { type: 'info' });
+        break;
     }
-    const integrationName = integrations.find(i => i.id === id)?.name || 'новая интеграция';
-    addToast(`Действие '${action}' для '${integrationName}'`, { type: 'info' });
   };
   
   const handleAddIntegration = (integrationToAdd: Integration) => {
     const newIntegration: Integration = {
         ...integrationToAdd,
-        status: 'pending', // Новая интеграция всегда в статусе "в ожидании"
+        status: 'pending',
     };
-    setIntegrations(prev => [...prev, newIntegration]);
-    setIsModalOpen(false);
-    addToast(`Интеграция '${integrationToAdd.name}' успешно добавлена.`, { type: 'success' });
+    setIsAddModalOpen(false);
+    
+    // Не добавляем в стейт, а сразу открываем настройки
+    setSelectedIntegration(newIntegration);
+    setIsSettingsModalOpen(true);
   };
+
+  const handleSaveSettings = (integrationToSave: Integration) => {
+    const isExisting = integrations.some(i => i.id === integrationToSave.id);
+
+    if (isExisting) {
+        // Логика обновления (пока просто заглушка, можно будет расширить)
+        setIntegrations(prev => prev.map(i => (i.id === integrationToSave.id ? { ...i, ...integrationToSave, status: 'active' as const } : i)));
+        addToast(`Настройки для "${integrationToSave.name}" обновлены.`, { type: 'success' });
+    } else {
+        // Логика добавления новой интеграции
+        const finalIntegration = { ...integrationToSave, status: 'active' as const };
+        setIntegrations(prev => [...prev, finalIntegration]);
+        addToast(`Интеграция "${integrationToSave.name}" успешно добавлена.`, { type: 'success' });
+    }
+
+    setIsSettingsModalOpen(false);
+    setSelectedIntegration(null);
+  };
+
+  const handleCloseSettingsModal = () => {
+      setIsSettingsModalOpen(false);
+      setSelectedIntegration(null);
+  }
 
   const availableIntegrations = useMemo(() => {
     const installedIds = new Set(integrations.map(i => i.id));
@@ -220,10 +265,16 @@ const SystemIntegrationsSettings: React.FC = () => {
           </div>
       </div>
       <AddIntegrationModal 
-        show={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        show={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddIntegration}
         availableIntegrations={availableIntegrations}
+      />
+      <SettingsIntegrationModal
+        show={isSettingsModalOpen}
+        onClose={handleCloseSettingsModal}
+        onSave={handleSaveSettings}
+        integration={selectedIntegration}
       />
     </>
   );
