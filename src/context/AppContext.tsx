@@ -368,45 +368,85 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     // Применяем тему и акцентный цвет ко всему приложению
     const applyThemeAndAccent = useCallback((theme: string, accent: string) => {
-        // Определяем акцентный цвет
+        // Новый список акцентных цветов (solid + градиенты + кастом)
         const accentColors = [
-            { key: 'primary', color: '#0d6efd' },
-            { key: 'success', color: '#198754' },
-            { key: 'danger', color: '#dc3545' },
-            { key: 'warning', color: '#fd7e14' },
-            { key: 'info', color: '#0dcaf0' },
-            { key: 'purple', color: '#6f42c1' },
-            { key: 'pink', color: '#d63384' },
-            { key: 'teal', color: '#20c997' }
+            { key: 'primary', color: '#0d6efd', type: 'solid' },
+            { key: 'success', color: '#198754', type: 'solid' },
+            { key: 'danger', color: '#dc3545', type: 'solid' },
+            { key: 'warning', color: '#fd7e14', type: 'solid' },
+            { key: 'info', color: '#0dcaf0', type: 'solid' },
+            { key: 'purple', color: '#6f42c1', type: 'solid' },
+            { key: 'pink', color: '#d63384', type: 'solid' },
+            { key: 'teal', color: '#20c997', type: 'solid' },
+            // Градиенты:
+            { key: 'blue-violet', color: 'linear-gradient(90deg, #0d6efd 0%, #6f42c1 100%)', type: 'gradient' },
+            { key: 'green-yellow', color: 'linear-gradient(90deg, #198754 0%, #fd7e14 100%)', type: 'gradient' },
+            { key: 'pink-orange', color: 'linear-gradient(90deg, #d63384 0%, #fd7e14 100%)', type: 'gradient' }
         ];
+
+        // Определяем выбранный цвет
+        let accentColor = accent;
+        let accentType: 'solid' | 'gradient' = 'solid';
         
-        const accentColor = accentColors.find(c => c.key === accent)?.color || '#0d6efd';
-        
-        // Основные цвета Bootstrap
-        document.documentElement.style.setProperty('--bs-primary', accentColor);
-        document.documentElement.style.setProperty('--bs-primary-rgb', hexToRgb(accentColor));
-        
-        // Дополнительные цвета на основе акцентного
-        const hsl = hexToHsl(accentColor);
-        if (hsl) {
-            // Создаем вариации акцентного цвета
-            document.documentElement.style.setProperty('--bs-primary-subtle', `hsl(${hsl.h}, ${hsl.s}%, 95%)`);
-            document.documentElement.style.setProperty('--bs-primary-bg-subtle', `hsl(${hsl.h}, ${hsl.s}%, 97%)`);
-            document.documentElement.style.setProperty('--bs-primary-border-subtle', `hsl(${hsl.h}, ${hsl.s}%, 85%)`);
+        const found = accentColors.find(c => c.key === accent);
+        if (found) {
+            accentColor = found.color;
+            accentType = found.type as 'solid' | 'gradient';
+        } else if (accent.startsWith('linear-gradient')) {
+            accentType = 'gradient';
+        } else if (accent.startsWith('#')) {
+            // Кастомный hex цвет
+            accentColor = accent;
+            accentType = 'solid';
         }
-        
-        // Применяем к кнопкам и другим элементам
-        document.documentElement.style.setProperty('--bs-btn-primary-bg', accentColor);
-        document.documentElement.style.setProperty('--bs-btn-primary-border-color', accentColor);
-        document.documentElement.style.setProperty('--bs-btn-primary-hover-bg', darkenColor(accentColor, 10));
-        document.documentElement.style.setProperty('--bs-btn-primary-hover-border-color', darkenColor(accentColor, 10));
-        
-        // Применяем к ссылкам
-        document.documentElement.style.setProperty('--bs-link-color', accentColor);
-        document.documentElement.style.setProperty('--bs-link-hover-color', darkenColor(accentColor, 15));
-        
-        // Применяем к фокусам
-        document.documentElement.style.setProperty('--bs-focus-ring-color', `${accentColor}40`);
+
+        // Применяем solid-цвет как раньше
+        if (accentType === 'solid') {
+            document.documentElement.style.setProperty('--bs-primary', accentColor);
+            document.documentElement.style.setProperty('--bs-primary-rgb', hexToRgb(accentColor));
+            
+            // Дополнительные цвета на основе акцентного
+            const hsl = hexToHsl(accentColor);
+            if (hsl) {
+                document.documentElement.style.setProperty('--bs-primary-subtle', `hsl(${hsl.h}, ${hsl.s}%, 95%)`);
+                document.documentElement.style.setProperty('--bs-primary-bg-subtle', `hsl(${hsl.h}, ${hsl.s}%, 97%)`);
+                document.documentElement.style.setProperty('--bs-primary-border-subtle', `hsl(${hsl.h}, ${hsl.s}%, 85%)`);
+            }
+            
+            document.documentElement.style.setProperty('--bs-btn-primary-bg', accentColor);
+            document.documentElement.style.setProperty('--bs-btn-primary-border-color', accentColor);
+            document.documentElement.style.setProperty('--bs-btn-primary-hover-bg', darkenColor(accentColor, 10));
+            document.documentElement.style.setProperty('--bs-btn-primary-hover-border-color', darkenColor(accentColor, 10));
+            document.documentElement.style.setProperty('--bs-link-color', accentColor);
+            document.documentElement.style.setProperty('--bs-link-hover-color', darkenColor(accentColor, 15));
+            document.documentElement.style.setProperty('--bs-focus-ring-color', `${accentColor}40`);
+            
+            // Очищаем градиент для совместимости
+            document.documentElement.style.setProperty('--tray-gradient', '');
+        } else {
+            // Для градиента: задаем переменную --tray-gradient и fallback для --bs-primary
+            document.documentElement.style.setProperty('--tray-gradient', accentColor);
+            
+            // Для совместимости: основной цвет для текста и иконок — берем первый цвет из градиента
+            const firstColor = accentColor.match(/#([0-9a-fA-F]{6})/g)?.[0] || '#0d6efd';
+            document.documentElement.style.setProperty('--bs-primary', firstColor);
+            document.documentElement.style.setProperty('--bs-primary-rgb', hexToRgb(firstColor));
+            
+            const hsl = hexToHsl(firstColor);
+            if (hsl) {
+                document.documentElement.style.setProperty('--bs-primary-subtle', `hsl(${hsl.h}, ${hsl.s}%, 95%)`);
+                document.documentElement.style.setProperty('--bs-primary-bg-subtle', `hsl(${hsl.h}, ${hsl.s}%, 97%)`);
+                document.documentElement.style.setProperty('--bs-primary-border-subtle', `hsl(${hsl.h}, ${hsl.s}%, 85%)`);
+            }
+            
+            document.documentElement.style.setProperty('--bs-btn-primary-bg', firstColor);
+            document.documentElement.style.setProperty('--bs-btn-primary-border-color', firstColor);
+            document.documentElement.style.setProperty('--bs-btn-primary-hover-bg', darkenColor(firstColor, 10));
+            document.documentElement.style.setProperty('--bs-btn-primary-hover-border-color', darkenColor(firstColor, 10));
+            document.documentElement.style.setProperty('--bs-link-color', firstColor);
+            document.documentElement.style.setProperty('--bs-link-hover-color', darkenColor(firstColor, 15));
+            document.documentElement.style.setProperty('--bs-focus-ring-color', `${firstColor}40`);
+        }
     }, [hexToRgb, hexToHsl, darkenColor]);
 
     // Загружаем сохраненные настройки при монтировании
