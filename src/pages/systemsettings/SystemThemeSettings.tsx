@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import './SystemSettings.css';
 
@@ -24,184 +24,257 @@ const SystemThemeSettings: React.FC = () => {
   const { 
     selectedAccent, 
     setSelectedAccent, 
-    applyThemeAndAccent 
+    applyThemeAndAccent,
+    addToast
   } = useAppContext();
-  
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
+
+  // Исходные настройки
+  const initialSettings = useMemo(() => ({
+    accentColor: selectedAccent,
+    animations: 'enabled',
+    gridDisplay: 'auto',
+    borderRadius: 'medium',
+    shadows: true,
+    transitions: true
+  }), [selectedAccent]);
+
+  const [settings, setSettings] = useState(initialSettings);
+  const [isDirty, setIsDirty] = useState(false);
+
+  // Отслеживаем изменения в настройках
+  useEffect(() => {
+    const hasChanges = JSON.stringify(settings) !== JSON.stringify(initialSettings);
+    setIsDirty(hasChanges);
+  }, [settings, initialSettings]);
+
+  // Отслеживаем изменения акцентного цвета отдельно
+  useEffect(() => {
+    if (selectedAccent !== initialSettings.accentColor) {
+      setIsDirty(true);
+    }
+  }, [selectedAccent, initialSettings.accentColor]);
+
+  const handleSettingsChange = (field: keyof typeof settings, value: any) => {
+    setSettings(prev => ({ ...prev, [field]: value }));
+    
+    // Если изменился акцентный цвет, применяем его сразу
+    if (field === 'accentColor') {
+      setSelectedAccent(value);
+    }
+  };
+
+  const handleAccentColorChange = (colorKey: string) => {
+    setSelectedAccent(colorKey);
+    setSettings(prev => ({ ...prev, accentColor: colorKey }));
+    setIsDirty(true);
+  };
 
   const handleSave = () => {
     // Сохраняем в localStorage
-    localStorage.setItem('selected-accent', selectedAccent);
+    localStorage.setItem('selected-accent', settings.accentColor);
+    localStorage.setItem('theme-settings', JSON.stringify(settings));
     
-    setIsPreviewMode(false);
-    console.log('Акцентный цвет сохранен:', selectedAccent);
+    setIsDirty(false);
+    
+    addToast('Настройки внешнего вида успешно сохранены.', { 
+      type: 'success', 
+      title: 'Сохранено' 
+    });
+    
+    console.log('Настройки сохранены:', settings);
   };
 
-  const handlePreview = () => {
-    setIsPreviewMode(!isPreviewMode);
+  const handleCancel = () => {
+    setSettings(initialSettings);
+    setSelectedAccent(initialSettings.accentColor);
+    setIsDirty(false);
+    
+    addToast('Изменения отменены.', { 
+      type: 'info', 
+      title: 'Отмена' 
+    });
   };
 
   const handleReset = () => {
+    const defaultSettings = {
+      accentColor: 'primary',
+      animations: 'enabled',
+      gridDisplay: 'auto',
+      borderRadius: 'medium',
+      shadows: true,
+      transitions: true
+    };
+    
+    setSettings(defaultSettings);
     setSelectedAccent('primary');
-    setIsPreviewMode(false);
+    setIsDirty(false);
     
     // Возвращаем к исходным настройкам
     applyThemeAndAccent('auto', 'primary');
+    
+    addToast('Настройки сброшены к значениям по умолчанию.', { 
+      type: 'info', 
+      title: 'Сброс' 
+    });
   };
 
   return (
-    <div className="system-settings-page theme-settings-compact">
-      <div className="settings-header theme-header-compact">
+    <div className="settings-page">
+      <div className="settings-header">
         <div className="settings-header-content">
           <div className="settings-title">
             <i className="bi bi-palette"></i>
-            <h1>Внешний вид</h1>
+            <div>
+              <h1>Внешний вид</h1>
+              <p className="settings-subtitle">
+                Настройте акцентные цвета и дополнительные параметры интерфейса для всей системы.
+              </p>
+            </div>
           </div>
-          <p className="settings-subtitle">
-            Настройте акцентные цвета и дополнительные параметры интерфейса.
-          </p>
         </div>
       </div>
 
-      <div className="settings-content-wrapper theme-content-compact">
-        <div className="row g-3">
-          {/* Акцентные цвета */}
-          <div className="col-12 col-lg-6">
-            <div className="settings-section theme-section-compact theme-section-standard">
-              <div className="settings-section-header theme-header-compact">
-                <i className="bi bi-droplet-half"></i>
-                <h3>Акцентный цвет</h3>
-                <div className="settings-header-actions">
-                  <button 
-                    type="button" 
-                    className={`btn btn-sm preview-toggle-btn ${isPreviewMode ? 'btn-success' : 'btn-outline-primary'}`}
-                    onClick={handlePreview}
-                    title={isPreviewMode ? 'Скрыть превью' : 'Показать превью'}
-                  >
-                    <i className={`bi ${isPreviewMode ? 'bi-eye-slash' : 'bi-eye'}`}></i>
-                    <span className="preview-text d-none d-sm-inline ms-1">{isPreviewMode ? 'Скрыть' : 'Превью'}</span>
-                  </button>
-                </div>
-              </div>
-              
-              <div className="accent-colors-grid accent-colors-grid-compact accent-colors-grid-standard">
-                {accentColors.map(color => (
-                  <div
-                    key={color.key}
-                    className={`accent-color-card accent-color-card-compact accent-color-card-standard ${selectedAccent === color.key ? 'active' : ''}`}
-                    onClick={() => setSelectedAccent(color.key)}
-                  >
-                    <div className="accent-preview accent-preview-compact accent-preview-standard" style={{ background: color.preview }}>
-                      <div className="accent-preview-content accent-preview-content-compact">
-                        <div className="preview-button preview-button-compact"></div>
-                        <div className="preview-link preview-link-compact"></div>
+      <div className="settings-content-wrapper">
+        <div className="settings-layout">
+          <div className="settings-main-content">
+            <div className="row g-3">
+              {/* Акцентные цвета */}
+              <div className="col-12 col-lg-6">
+                <div className="settings-section">
+                  <div className="settings-section-header">
+                    <i className="bi bi-droplet-half"></i>
+                    <h3>Акцентный цвет</h3>
+                  </div>
+                  
+                  <div className="accent-colors-grid accent-colors-grid-compact accent-colors-grid-standard">
+                    {accentColors.map(color => (
+                      <div
+                        key={color.key}
+                        className={`accent-color-card accent-color-card-compact accent-color-card-standard ${selectedAccent === color.key ? 'active' : ''}`}
+                        onClick={() => handleAccentColorChange(color.key)}
+                      >
+                        <div className="accent-preview accent-preview-compact accent-preview-standard" style={{ background: color.preview }}>
+                          <div className="accent-preview-content accent-preview-content-compact">
+                            <div className="preview-button preview-button-compact"></div>
+                            <div className="preview-link preview-link-compact"></div>
+                          </div>
+                        </div>
+                        <div className="accent-info accent-info-compact accent-info-standard">
+                          <span className="accent-name accent-name-compact">{color.name}</span>
+                          {selectedAccent === color.key && (
+                            <i className="bi bi-check-circle-fill accent-selected"></i>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="accent-info accent-info-compact accent-info-standard">
-                      <span className="accent-name accent-name-compact">{color.name}</span>
-                      {selectedAccent === color.key && (
-                        <i className="bi bi-check-circle-fill accent-selected"></i>
-                      )}
-                    </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* Дополнительные настройки */}
-          <div className="col-12 col-lg-6">
-            <div className="settings-section theme-section-compact theme-section-standard">
-              <div className="settings-section-header theme-header-compact">
-                <i className="bi bi-sliders"></i>
-                <h3>Дополнительные настройки</h3>
-              </div>
-              
-              <div className="additional-settings-content">
-                <div className="setting-item">
-                  <div className="setting-icon">
-                    <i className="bi bi-fonts"></i>
+              {/* Дополнительные настройки */}
+              <div className="col-12 col-lg-6">
+                <div className="settings-section modules-section">
+                  <div className="settings-section-header">
+                    <i className="bi bi-gear"></i>
+                    <h3>Дополнительные настройки</h3>
                   </div>
-                  <div className="setting-content">
-                    <label className="setting-label">Размер шрифта</label>
-                    <select className="form-select form-select-compact setting-select">
-                      <option value="small">Мелкий</option>
-                      <option value="medium" selected>Средний</option>
-                      <option value="large">Крупный</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div className="setting-item">
-                  <div className="setting-icon">
-                    <i className="bi bi-layout-text-window"></i>
-                  </div>
-                  <div className="setting-content">
-                    <label className="setting-label">Плотность интерфейса</label>
-                    <select className="form-select form-select-compact setting-select">
-                      <option value="compact">Компактная</option>
-                      <option value="normal" selected>Обычная</option>
-                      <option value="spacious">Просторная</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div className="setting-item">
-                  <div className="setting-icon">
-                    <i className="bi bi-eye"></i>
-                  </div>
-                  <div className="setting-content">
-                    <label className="setting-label">Анимации</label>
-                    <select className="form-select form-select-compact setting-select">
-                      <option value="enabled" selected>Включены</option>
-                      <option value="reduced">Уменьшенные</option>
-                      <option value="disabled">Отключены</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div className="setting-item">
-                  <div className="setting-icon">
-                    <i className="bi bi-grid-3x3-gap"></i>
-                  </div>
-                  <div className="setting-content">
-                    <label className="setting-label">Отображение сетки</label>
-                    <select className="form-select form-select-compact setting-select">
-                      <option value="auto" selected>Авто</option>
-                      <option value="compact">Компактная</option>
-                      <option value="spacious">Просторная</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="setting-item">
-                  <div className="setting-icon">
-                    <i className="bi bi-brightness-high"></i>
-                  </div>
-                  <div className="setting-content">
-                    <label className="setting-label">Тема интерфейса</label>
-                    <select className="form-select form-select-compact setting-select">
-                      <option value="auto" selected>Авто</option>
-                      <option value="light">Светлая</option>
-                      <option value="dark">Тёмная</option>
-                    </select>
+                  
+                  <div className="settings-form">
+                    <div className="form-group">
+                      <label className="form-label">Анимации</label>
+                      <select 
+                        className="form-select" 
+                        value={settings.animations}
+                        onChange={(e) => handleSettingsChange('animations', e.target.value)}
+                      >
+                        <option value="enabled">Включены</option>
+                        <option value="reduced">Уменьшенные</option>
+                        <option value="disabled">Отключены</option>
+                      </select>
+                      <div className="form-text">Анимации переходов и эффектов в интерфейсе.</div>
+                    </div>
+                    
+                    <div className="form-group">
+                      <label className="form-label">Отображение сетки</label>
+                      <select 
+                        className="form-select" 
+                        value={settings.gridDisplay}
+                        onChange={(e) => handleSettingsChange('gridDisplay', e.target.value)}
+                      >
+                        <option value="auto">Авто</option>
+                        <option value="compact">Компактная</option>
+                        <option value="spacious">Просторная</option>
+                      </select>
+                      <div className="form-text">Стиль отображения сеток и таблиц.</div>
+                    </div>
+                    
+                    <div className="form-group">
+                      <label className="form-label">Скругление углов</label>
+                      <select 
+                        className="form-select" 
+                        value={settings.borderRadius}
+                        onChange={(e) => handleSettingsChange('borderRadius', e.target.value)}
+                      >
+                        <option value="none">Без скругления</option>
+                        <option value="small">Малое</option>
+                        <option value="medium">Среднее</option>
+                        <option value="large">Большое</option>
+                      </select>
+                      <div className="form-text">Скругление углов у карточек и кнопок.</div>
+                    </div>
+                    
+                    <div className="form-group">
+                      <div className="form-check form-switch form-check-lg">
+                        <input 
+                          className="form-check-input" 
+                          type="checkbox" 
+                          id="shadows" 
+                          checked={settings.shadows} 
+                          onChange={(e) => handleSettingsChange('shadows', e.target.checked)} 
+                        />
+                        <label className="form-check-label" htmlFor="shadows">Тени элементов</label>
+                      </div>
+                      <div className="form-text">Отображение теней у карточек и модальных окон.</div>
+                    </div>
+                    
+                    <div className="form-group">
+                      <div className="form-check form-switch form-check-lg">
+                        <input 
+                          className="form-check-input" 
+                          type="checkbox" 
+                          id="transitions" 
+                          checked={settings.transitions} 
+                          onChange={(e) => handleSettingsChange('transitions', e.target.checked)} 
+                        />
+                        <label className="form-check-label" htmlFor="transitions">Плавные переходы</label>
+                      </div>
+                      <div className="form-text">Плавные анимации при изменении состояний элементов.</div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Кнопки действий */}
-        <div className="settings-actions theme-actions-compact">
-          <button type="button" className="btn btn-outline-secondary btn-sm" onClick={handleReset}>
-            <i className="bi bi-arrow-clockwise me-1"></i>
-            <span className="d-none d-sm-inline">Сбросить</span>
-          </button>
-          <button type="button" className="btn btn-primary" onClick={handleSave}>
-            <i className="bi bi-save me-1"></i>
-            Сохранить
-          </button>
+          <div className="settings-sidebar">
+            <div className="settings-section">
+              <div className="settings-section-header">
+                <i className="bi bi-lightning"></i>
+                <h3>Быстрые действия</h3>
+              </div>
+              <div className="d-grid gap-2">
+                <button className="btn btn-outline-secondary" onClick={handleReset}>
+                  <i className="bi bi-arrow-clockwise me-2"></i>Сбросить настройки
+                </button>
+                <button className="btn btn-outline-secondary" onClick={handleCancel} disabled={!isDirty}>
+                  <i className="bi bi-x-circle me-2"></i>Отменить
+                </button>
+                <button className="btn btn-primary" onClick={handleSave} disabled={!isDirty}>
+                  <i className="bi bi-save me-2"></i>Сохранить
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
