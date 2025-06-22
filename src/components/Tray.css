@@ -63,6 +63,19 @@
     background-color: var(--bs-secondary-bg);
 }
 
+/* Поддержка градиентов для элементов трея */
+.tray-badge[style*="--tray-gradient"] {
+    background: var(--tray-gradient);
+    color: white;
+    border-color: transparent;
+}
+
+.tray-badge[style*="--tray-gradient"]:hover {
+    background: var(--tray-gradient);
+    opacity: 0.9;
+    border-color: transparent;
+}
+
 .tray-badge-text {
     overflow: hidden;
     text-overflow: ellipsis;

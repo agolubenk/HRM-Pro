@@ -9,7 +9,8 @@ interface AccentColor {
   preview: string;
 }
 
-const accentColors: AccentColor[] = [
+const allAccentColors: AccentColor[] = [
+  // Solid
   { key: 'primary', name: 'Синий', color: '#0d6efd', preview: '#0d6efd' },
   { key: 'success', name: 'Зелёный', color: '#198754', preview: '#198754' },
   { key: 'danger', name: 'Красный', color: '#dc3545', preview: '#dc3545' },
@@ -17,7 +18,11 @@ const accentColors: AccentColor[] = [
   { key: 'info', name: 'Голубой', color: '#0dcaf0', preview: '#0dcaf0' },
   { key: 'purple', name: 'Фиолетовый', color: '#6f42c1', preview: '#6f42c1' },
   { key: 'pink', name: 'Розовый', color: '#d63384', preview: '#d63384' },
-  { key: 'teal', name: 'Бирюзовый', color: '#20c997', preview: '#20c997' }
+  { key: 'teal', name: 'Бирюзовый', color: '#20c997', preview: '#20c997' },
+  // Gradients
+  { key: 'blue-violet', name: 'Индиго', color: 'linear-gradient(90deg, #0d6efd 0%, #6f42c1 100%)', preview: 'linear-gradient(90deg, #0d6efd 0%, #6f42c1 100%)' },
+  { key: 'green-yellow', name: 'Лайм', color: 'linear-gradient(90deg, #198754 0%, #fd7e14 100%)', preview: 'linear-gradient(90deg, #198754 0%, #fd7e14 100%)' },
+  { key: 'pink-orange', name: 'Закат', color: 'linear-gradient(90deg, #d63384 0%, #fd7e14 100%)', preview: 'linear-gradient(90deg, #d63384 0%, #fd7e14 100%)' },
 ];
 
 const SystemThemeSettings: React.FC = () => {
@@ -26,6 +31,10 @@ const SystemThemeSettings: React.FC = () => {
     setSelectedAccent,
     addToast
   } = useAppContext();
+
+  const [customColor, setCustomColor] = useState(
+    !allAccentColors.some(c => c.key === selectedAccent) ? selectedAccent : '#0d6efd'
+  );
 
   // Загружаем сохраненные настройки из localStorage или используем значения по умолчанию
   const loadSavedSettings = () => {
@@ -62,6 +71,15 @@ const SystemThemeSettings: React.FC = () => {
 
   const handleSettingsChange = (field: keyof typeof settings, value: any) => {
     setSettings((prev: typeof settings) => ({ ...prev, [field]: value }));
+    if (field === 'accentColor' && value.startsWith('#')) {
+      setCustomColor(value);
+    }
+  };
+  
+  const handleCustomColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newColor = e.target.value;
+    setCustomColor(newColor);
+    handleSettingsChange('accentColor', newColor);
   };
 
   const handleSave = () => {
@@ -119,41 +137,56 @@ const SystemThemeSettings: React.FC = () => {
 
       <div className="settings-content-wrapper">
         <div className="row g-4">
-          {/* Акцентные цвета */}
-          <div className="col-12 col-lg-4 col-md-6">
+          {/* Левая колонка с цветами */}
+          <div className="col-12 col-lg-7">
             <div className="settings-section h-100">
               <div className="settings-section-header">
                 <i className="bi bi-droplet-half"></i>
                 <h3>Акцентный цвет</h3>
               </div>
-              <div className="accent-colors-grid accent-colors-grid-compact accent-colors-grid-standard">
-                {accentColors.map(color => (
+              <div className="accent-colors-grid">
+                {allAccentColors.map(color => (
                   <div
                     key={color.key}
-                    className={`accent-color-card accent-color-card-compact accent-color-card-standard ${settings.accentColor === color.key ? 'active' : ''}`}
+                    className={`accent-color-card ${settings.accentColor === color.key ? 'active' : ''}`}
                     onClick={() => handleSettingsChange('accentColor', color.key)}
                   >
-                    <div className="accent-preview accent-preview-compact accent-preview-standard" style={{ background: color.preview }}>
-                      <div className="accent-preview-content accent-preview-content-compact">
-                        <div className="preview-button preview-button-compact"></div>
-                        <div className="preview-link preview-link-compact"></div>
+                    <div className="accent-preview" style={{ background: color.preview }}>
+                      <div className="accent-preview-content">
+                        <div className="preview-button"></div>
+                        <div className="preview-link"></div>
                       </div>
                     </div>
-                    <div className="accent-info accent-info-compact accent-info-standard">
-                      <span className="accent-name accent-name-compact">{color.name}</span>
-                      {settings.accentColor === color.key && (
-                        <i className="bi bi-check-circle-fill accent-selected"></i>
-                      )}
+                    <div className="accent-info">
+                      <span className="accent-name">{color.name}</span>
+                      {settings.accentColor === color.key && <i className="bi bi-check-circle-fill accent-selected"></i>}
                     </div>
                   </div>
                 ))}
               </div>
+
+              <h4 className="mt-4">Свой цвет</h4>
+              <div className="custom-color-picker">
+                <input 
+                  type="color" 
+                  className="form-control form-control-color"
+                  value={customColor.startsWith('#') ? customColor : '#ffffff'}
+                  onChange={handleCustomColorChange}
+                />
+                <input 
+                  type="text"
+                  className="form-control"
+                  placeholder="Напр. #2E8B57 или linear-gradient(...)"
+                  value={customColor}
+                  onChange={handleCustomColorChange}
+                />
+              </div>
             </div>
           </div>
 
-          {/* Дополнительные настройки */}
-          <div className="col-12 col-lg-4 col-md-6">
-            <div className="settings-section modules-section h-100">
+          {/* Правая колонка с настройками */}
+          <div className="col-12 col-lg-5">
+            <div className="settings-section h-100">
               <div className="settings-section-header">
                 <i className="bi bi-gear"></i>
                 <h3>Дополнительные настройки</h3>

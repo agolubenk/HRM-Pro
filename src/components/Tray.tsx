@@ -24,7 +24,7 @@ interface TrayItem {
 }
 
 const Tray: React.FC = () => {
-    const { state, dispatch, tasks: contextTasks, closeTask, restoreTask, saveAllData, testStorage } = useAppContext();
+    const { state, dispatch, tasks: contextTasks, closeTask, restoreTask } = useAppContext();
     const { tasks: stateTasks, pinnedNotifications, pinnedTasks, language } = state;
 
     // Унификация всех элементов для трея
@@ -147,8 +147,6 @@ const Tray: React.FC = () => {
             closeTask(item.id as number);
             dispatch({ type: 'UNPIN_NOTIFICATION', payload: item.id as number });
         }
-        // Принудительно сохраняем данные после изменения
-        setTimeout(saveAllData, 100);
     };
 
     const handleRestoreItem = (item: TrayItem) => {
@@ -158,13 +156,6 @@ const Tray: React.FC = () => {
         } else if (item.type === 'task' || item.type === 'article' || item.type === 'meeting') {
             dispatch({ type: 'UNPIN_TASK', payload: item.id as number });
         }
-        // Принудительно сохраняем данные после изменения
-        setTimeout(saveAllData, 100);
-    };
-
-    const handleTestStorage = () => {
-        const isWorking = testStorage();
-        alert(`Тест localStorage: ${isWorking ? '✅ Работает' : '❌ Не работает'}`);
     };
 
     if (pinnedItems.length === 0) {
@@ -172,9 +163,6 @@ const Tray: React.FC = () => {
             <footer className="tray-empty">
                 <span className="text-muted">© Иван Голубенко, 2023–2024 | HRM Pro v1.0</span>
                 <span className="text-muted">{language === 'ru' ? '🇷🇺 Русский' : '🇬🇧 English'}</span>
-                <button onClick={handleTestStorage} style={{ fontSize: '0.8rem', padding: '0.2rem 0.5rem' }}>
-                    Тест сохранения
-                </button>
             </footer>
         );
     }
