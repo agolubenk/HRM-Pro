@@ -1,5 +1,6 @@
 import React from 'react';
 import './CBPage.css';
+import { LineChart, Line, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, Legend, LabelList } from 'recharts';
 
 const CBPage: React.FC = () => {
   // Моковые данные для задач
@@ -9,6 +10,35 @@ const CBPage: React.FC = () => {
     {id:3, title:'Согласовать бюджет на льготы', desc:'Провести согласование бюджета на корпоративные льготы на Q3. Срок: до 25 июня.', status:'На утверждение', priority: 'high'},
     {id:4, title:'Обновить грейды сотрудников', desc:'Провести пересмотр грейдов по итогам оценки эффективности. Срок: до 30 июня.', status:'Для информации', priority: 'low'}
   ];
+
+  // Моковые данные для графиков (текущий и прошлый год)
+  const payrollData = [
+    { month: 'Янв', current: 45000000, prev: 41000000 },
+    { month: 'Фев', current: 45200000, prev: 41500000 },
+    { month: 'Мар', current: 45500000, prev: 42000000 },
+    { month: 'Апр', current: 45800000, prev: 43000000 },
+    { month: 'Май', current: 46000000, prev: 44000000 },
+  ];
+  const medianSalaryData = [
+    { month: 'Янв', current: 420000, prev: 390000 },
+    { month: 'Фев', current: 421000, prev: 395000 },
+    { month: 'Мар', current: 422000, prev: 400000 },
+    { month: 'Апр', current: 423000, prev: 410000 },
+    { month: 'Май', current: 424000, prev: 415000 },
+  ];
+  const benefitsBudgetData = [
+    { month: 'Янв', current: 5000000, prev: 4000000 },
+    { month: 'Фев', current: 5100000, prev: 4200000 },
+    { month: 'Мар', current: 5200000, prev: 4500000 },
+    { month: 'Апр', current: 5300000, prev: 4800000 },
+    { month: 'Май', current: 5400000, prev: 5000000 },
+  ];
+
+  // Функция для вычисления относительного изменения (в процентах)
+  const getDelta = (curr: number, prev: number) => {
+    if (!prev) return 0;
+    return Math.round(((curr - prev) / prev) * 100);
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('ru-RU', {
@@ -137,12 +167,25 @@ const CBPage: React.FC = () => {
               <div className="mb-3">
                 <h2 className="text-primary mb-0 d-inline-block fw-bold">{formatCurrency(45000000)}</h2>
               </div>
-              <div className="mb-3">
-                <div className="progress">
-                  <div className="progress-bar bg-primary" style={{width: '85%'}}></div>
-                </div>
-                <small className="text-muted">85% от бюджета</small>
+              <div className="mb-3" style={{height: 64}}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={payrollData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                    <YAxis hide />
+                    <Tooltip formatter={formatCurrency} labelFormatter={label => `Месяц: ${label}`} />
+                    <Legend verticalAlign="top" height={24} iconType="circle"/>
+                    <Bar dataKey="prev" fill="#e0e0e0" name="Прошлый год" maxBarSize={16} />
+                    <Bar dataKey="current" fill="#1976d2" name="Текущий год" maxBarSize={16} >
+                      <LabelList dataKey={d => getDelta(d.current, d.prev) + '%'} position="top" fill="#1976d2" fontSize={10} formatter={v => {
+                        const num = typeof v === 'string' ? parseInt(v) : Number(v);
+                        if (!isNaN(num)) return num > 0 ? `+${num}%` : `${num}%`;
+                        return v;
+                      }} />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
+              <small className="text-muted">Рост: {getDelta(payrollData[payrollData.length-1].current, payrollData[payrollData.length-1].prev)}% к маю прошлого года</small>
               <button className="btn btn-outline-primary btn-sm w-100 mt-auto">
                 <i className="bi bi-arrow-right me-1"></i>
                 Перейти
@@ -165,6 +208,25 @@ const CBPage: React.FC = () => {
               <div className="mb-3">
                 <h2 className="text-success mb-0 d-inline-block fw-bold">{formatCurrency(420000)}</h2>
               </div>
+              <div className="mb-3" style={{height: 64}}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={medianSalaryData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                    <YAxis hide />
+                    <Tooltip formatter={formatCurrency} labelFormatter={label => `Месяц: ${label}`} />
+                    <Legend verticalAlign="top" height={24} iconType="circle"/>
+                    <Bar dataKey="prev" fill="#e0e0e0" name="Прошлый год" maxBarSize={16} />
+                    <Bar dataKey="current" fill="#388e3c" name="Текущий год" maxBarSize={16} >
+                      <LabelList dataKey={d => getDelta(d.current, d.prev) + '%'} position="top" fill="#388e3c" fontSize={10} formatter={v => {
+                        const num = typeof v === 'string' ? parseInt(v) : Number(v);
+                        if (!isNaN(num)) return num > 0 ? `+${num}%` : `${num}%`;
+                        return v;
+                      }} />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <small className="text-muted">Рост: {getDelta(medianSalaryData[medianSalaryData.length-1].current, medianSalaryData[medianSalaryData.length-1].prev)}% к маю прошлого года</small>
               <div className="mb-2">
                 <div className="d-flex justify-content-between small text-muted mb-1">
                   <span>Год к году: <span className='fw-semibold text-success'>+22,000₸ (5.5%)</span></span>
@@ -201,6 +263,25 @@ const CBPage: React.FC = () => {
               <div className="mb-3">
                 <h2 className="text-info mb-0 d-inline-block fw-bold">{formatCurrency(5000000)}</h2>
               </div>
+              <div className="mb-3" style={{height: 64}}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={benefitsBudgetData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                    <YAxis hide />
+                    <Tooltip formatter={formatCurrency} labelFormatter={label => `Месяц: ${label}`} />
+                    <Legend verticalAlign="top" height={24} iconType="circle"/>
+                    <Bar dataKey="prev" fill="#e0e0e0" name="Прошлый год" maxBarSize={16} />
+                    <Bar dataKey="current" fill="#0097a7" name="Текущий год" maxBarSize={16} >
+                      <LabelList dataKey={d => getDelta(d.current, d.prev) + '%'} position="top" fill="#0097a7" fontSize={10} formatter={v => {
+                        const num = typeof v === 'string' ? parseInt(v) : Number(v);
+                        if (!isNaN(num)) return num > 0 ? `+${num}%` : `${num}%`;
+                        return v;
+                      }} />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <small className="text-muted">Рост: {getDelta(benefitsBudgetData[benefitsBudgetData.length-1].current, benefitsBudgetData[benefitsBudgetData.length-1].prev)}% к маю прошлого года</small>
               <div className="mb-3">
                 <div className="progress">
                   <div className="progress-bar bg-info" style={{width: '78%'}}></div>
