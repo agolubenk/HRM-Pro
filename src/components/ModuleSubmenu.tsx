@@ -39,6 +39,22 @@ const ModuleSubmenu: React.FC = () => {
                 setActiveItem(routeMap[path]);
             }
         }
+        
+        // Определяем активный элемент для модуля C&B
+        if (activeModule === MODULES.CB && location.pathname.startsWith('/cb')) {
+            const path = location.pathname.split('/')[2]; // Получаем часть после /cb/
+            const routeMap: Record<string, string> = {
+                '': 'Обзор',
+                'salaries': 'Зарплаты',
+                'bonuses': 'Бонусы',
+                'benefits': 'Льготы',
+                'calculator': 'Калькулятор',
+                'grades': 'Грейды'
+            };
+            if (routeMap[path]) {
+                setActiveItem(routeMap[path]);
+            }
+        }
     }, [activeModule, location.pathname]);
     
     const isVisible = activeModule && submenuItems.length > 0;
@@ -59,6 +75,22 @@ const ModuleSubmenu: React.FC = () => {
             if (route) {
                 // Используем window.location.href для абсолютного перехода
                 window.location.href = `/settings/${route}`;
+            }
+        }
+        
+        // Навигация для модуля C&B
+        if (activeModule === MODULES.CB) {
+            const routeMap: Record<string, string> = {
+                'Обзор': '/cb',
+                'Зарплаты': '/cb/salaries',
+                'Бонусы': '/cb/bonuses',
+                'Льготы': '/cb/benefits',
+                'Калькулятор': '/cb/calculator',
+                'Грейды': '/cb/grades'
+            };
+            const route = routeMap[item.text];
+            if (route) {
+                navigate(route);
             }
         }
     };

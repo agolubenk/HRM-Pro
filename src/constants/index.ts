@@ -92,7 +92,8 @@ export const moduleSubmenus: Record<string, SubmenuItem[]> = {
         { icon: 'bi-bar-chart', text: 'Прогресс' }
     ],
     [MODULES.CB]: [
-        { icon: 'bi-cash-stack', text: 'Зарплаты', active: true },
+        { icon: 'bi-speedometer2', text: 'Обзор', active: true },
+        { icon: 'bi-cash-stack', text: 'Зарплаты' },
         { icon: 'bi-gift', text: 'Бонусы' },
         { icon: 'bi-award', text: 'Льготы' },
         { icon: 'bi-calculator', text: 'Калькулятор' },

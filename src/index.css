@@ -49,3 +49,37 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Глобальные компактные стили для всех кнопок */
+.btn {
+  padding: 6px 16px;
+  font-size: 0.95rem;
+  min-height: 32px;
+  border-radius: 6px;
+}
+
+.btn-sm, .btn.btn-sm {
+  padding: 3px 10px;
+  font-size: 0.85rem;
+  min-height: 26px;
+  border-radius: 5px;
+}
+
+/* Компактные стили для кастомных кнопок в таблицах и карточках */
+.btn-edit,
+.btn-view,
+.action-buttons button,
+.benefit-actions button {
+  padding: 3px 10px;
+  font-size: 0.85rem;
+  min-height: 26px;
+  border-radius: 5px;
+}
+
+.btn-group-sm .btn,
+.btn-group .btn-sm {
+  padding: 3px 10px;
+  font-size: 0.85rem;
+  min-height: 26px;
+  border-radius: 5px;
+}

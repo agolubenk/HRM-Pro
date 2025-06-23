@@ -26,6 +26,17 @@ const ModuleCard: React.FC<{ module: Module; onContextMenu: (e: React.MouseEvent
                     }
                 }, 100);
             }
+            
+            // Навигация на страницу C&B
+            if (module.key === MODULES.CB) {
+                setTimeout(() => {
+                    try {
+                        navigate('/cb');
+                    } catch (error) {
+                        console.error('Ошибка навигации в ModuleGrid:', error);
+                    }
+                }, 100);
+            }
         } catch (error) {
             console.error('Ошибка в handleClick ModuleGrid:', error);
         }

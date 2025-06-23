@@ -320,14 +320,14 @@ body {
 .module-count {
     font-size: 0.75rem;
     color: var(--bs-secondary-color);
-    line-height: 1.2;
 }
 
 .main-content {
+    width: 100%;
     padding: 1.5rem;
-    padding-bottom: calc(var(--footer-height) + 1.5rem);
     margin-top: var(--nav-height);
-    transition: margin-top 0.3s ease-in-out;
+    transition: margin-left 0.3s ease;
+    padding-bottom: calc(var(--footer-height) + 3rem);
 }
 
 .main-content.with-submenu {

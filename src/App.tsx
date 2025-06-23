@@ -24,6 +24,15 @@ import ModuleSubmenu from './components/ModuleSubmenu';
 import CommandCenter from './components/CommandCenter';
 import StatWidgets from './components/StatWidgets';
 import Tray from './components/Tray';
+import CBPage from './pages/CBPage';
+import SalariesPage from './pages/cb/SalariesPage';
+import BonusesPage from './pages/cb/BonusesPage';
+import SystemGeneralSettings from './pages/systemsettings/SystemGeneralSettings';
+import SystemUsersSettings from './pages/systemsettings/SystemUsersSettings';
+import SystemSecuritySettings from './pages/systemsettings/SystemSecuritySettings';
+import SystemIntegrationsSettings from './pages/systemsettings/SystemIntegrationsSettings';
+import SystemThemeSettings from './pages/systemsettings/SystemThemeSettings';
+import { useActiveModule } from './hooks/useActiveModule';
 
 // Lazy loading для страниц, которые не загружаются сразу
 const ActivityLogPage = lazy(() => import('./pages/ActivityLogPage'));
@@ -61,6 +70,9 @@ const AppLayout = () => {
   const { state } = useAppContext();
   const hasSubmenu = state.activeModule && moduleSubmenus[state.activeModule]?.length > 0;
   const mainContentClass = `main-content ${hasSubmenu ? 'with-submenu' : ''}`;
+  
+  // Используем хук для автоматической установки активного модуля
+  useActiveModule();
 
   return (
     <div className="app-container">
@@ -107,6 +119,18 @@ const router = createBrowserRouter([
         element: <SystemSettingsPage />,
       },
       {
+        path: "/cb",
+        element: <CBPage />,
+      },
+      {
+        path: "/cb/salaries",
+        element: <SalariesPage />,
+      },
+      {
+        path: "/cb/bonuses",
+        element: <BonusesPage />,
+      },
+      {
         path: "/account/activity-log",
         element: (
           <Suspense fallback={<LoadingSpinner />}>
@@ -133,6 +157,38 @@ const router = createBrowserRouter([
       {
         path: "/503",
         element: <ErrorPageWrapper errorCode={503} />
+      },
+      {
+        path: "/settings/general",
+        element: <SystemGeneralSettings />,
+      },
+      {
+        path: "/settings/users",
+        element: <SystemUsersSettings />,
+      },
+      {
+        path: "/settings/security",
+        element: <SystemSecuritySettings />,
+      },
+      {
+        path: "/settings/integrations",
+        element: <SystemIntegrationsSettings />,
+      },
+      {
+        path: "/settings/theme",
+        element: <SystemThemeSettings />,
+      },
+      {
+        path: "/cb/benefits",
+        element: <div className="content-area"><h2>Управление льготами</h2><p>Страница в разработке...</p></div>,
+      },
+      {
+        path: "/cb/calculator",
+        element: <div className="content-area"><h2>Калькулятор компенсаций</h2><p>Страница в разработке...</p></div>,
+      },
+      {
+        path: "/cb/grades",
+        element: <div className="content-area"><h2>Управление грейдами</h2><p>Страница в разработке...</p></div>,
       },
       {
         path: "*",
