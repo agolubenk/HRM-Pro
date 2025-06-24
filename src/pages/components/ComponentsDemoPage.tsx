@@ -191,7 +191,7 @@ const ComponentsDemoPage: React.FC = () => {
       setShowForm(true);
       setShowDetail(false);
     } else if (action === 'delete') {
-      if (confirm('Вы уверены, что хотите удалить этот элемент?')) {
+      if (window.confirm('Вы уверены, что хотите удалить этот элемент?')) {
         alert('Элемент удален!');
         setShowDetail(false);
       }
