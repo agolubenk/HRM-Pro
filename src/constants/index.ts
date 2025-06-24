@@ -97,7 +97,8 @@ export const moduleSubmenus: Record<string, SubmenuItem[]> = {
         { icon: 'bi-gift', text: 'Бонусы' },
         { icon: 'bi-award', text: 'Льготы' },
         { icon: 'bi-calculator', text: 'Калькулятор' },
-        { icon: 'bi-file-earmark-bar-graph', text: 'Грейды' }
+        { icon: 'bi-file-earmark-bar-graph', text: 'Грейды' },
+        { icon: 'bi-graph-up-arrow', text: 'Аналитика рынка' }
     ],
     [MODULES.HROPS]: [
         { icon: 'bi-gear-wide-connected', text: 'Процессы', active: true },

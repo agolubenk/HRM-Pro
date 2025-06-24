@@ -49,7 +49,8 @@ const ModuleSubmenu: React.FC = () => {
                 'bonuses': 'Бонусы',
                 'benefits': 'Льготы',
                 'calculator': 'Калькулятор',
-                'grades': 'Грейды'
+                'grades': 'Грейды',
+                'market-analytics': 'Аналитика рынка'
             };
             if (routeMap[path]) {
                 setActiveItem(routeMap[path]);
@@ -86,7 +87,8 @@ const ModuleSubmenu: React.FC = () => {
                 'Бонусы': '/cb/bonuses',
                 'Льготы': '/cb/benefits',
                 'Калькулятор': '/cb/calculator',
-                'Грейды': '/cb/grades'
+                'Грейды': '/cb/grades',
+                'Аналитика рынка': '/cb/market-analytics'
             };
             const route = routeMap[item.text];
             if (route) {

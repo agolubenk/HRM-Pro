@@ -27,6 +27,7 @@ import Tray from './components/Tray';
 import CBPage from './pages/CBPage';
 import SalariesPage from './pages/cb/SalariesPage';
 import BonusesPage from './pages/cb/BonusesPage';
+import MarketAnalyticsPage from './pages/cb/MarketAnalyticsPage';
 import SystemGeneralSettings from './pages/systemsettings/SystemGeneralSettings';
 import SystemUsersSettings from './pages/systemsettings/SystemUsersSettings';
 import SystemSecuritySettings from './pages/systemsettings/SystemSecuritySettings';
@@ -129,6 +130,10 @@ const router = createBrowserRouter([
       {
         path: "/cb/bonuses",
         element: <BonusesPage />,
+      },
+      {
+        path: "/cb/market-analytics",
+        element: <MarketAnalyticsPage />,
       },
       {
         path: "/account/activity-log",
