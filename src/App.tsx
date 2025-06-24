@@ -33,6 +33,7 @@ import SystemUsersSettings from './pages/systemsettings/SystemUsersSettings';
 import SystemSecuritySettings from './pages/systemsettings/SystemSecuritySettings';
 import SystemIntegrationsSettings from './pages/systemsettings/SystemIntegrationsSettings';
 import SystemThemeSettings from './pages/systemsettings/SystemThemeSettings';
+import ComponentsDemoPage from './pages/components/ComponentsDemoPage';
 import { useActiveModule } from './hooks/useActiveModule';
 
 // Lazy loading для страниц, которые не загружаются сразу
@@ -194,6 +195,10 @@ const router = createBrowserRouter([
       {
         path: "/cb/grades",
         element: <div className="content-area"><h2>Управление грейдами</h2><p>Страница в разработке...</p></div>,
+      },
+      {
+        path: "/components/demo",
+        element: <ComponentsDemoPage />,
       },
       {
         path: "*",
