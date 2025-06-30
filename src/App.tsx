@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect, useRef } from 'react';
 import './App.css';
 import {
   createBrowserRouter,
@@ -68,7 +68,7 @@ const ErrorPageWrapper: React.FC<{ errorCode: number }> = ({ errorCode }) => {
   );
 };
 
-const AppLayout = () => {
+const AppLayout = ({ searchInputRef }: { searchInputRef: React.RefObject<HTMLInputElement | null> }) => {
   const { state } = useAppContext();
   const hasSubmenu = state.activeModule && moduleSubmenus[state.activeModule]?.length > 0;
   const mainContentClass = `main-content ${hasSubmenu ? 'with-submenu' : ''}`;
@@ -78,7 +78,7 @@ const AppLayout = () => {
 
   return (
     <div className="app-container">
-      <Navigation />
+      <Navigation searchInputRef={searchInputRef} />
       <ModuleSubmenu />
       <QuickPanel />
       <main className={mainContentClass}>
@@ -90,139 +90,157 @@ const AppLayout = () => {
   );
 };
 
-const AppWithProviders = () => (
-  <AppProvider>
-    <ToastProvider>
-      <ToastContainer />
-      <RouterProvider router={router} />
-    </ToastProvider>
-  </AppProvider>
-);
+const AppWithProviders: React.FC<{ searchInputRef: React.RefObject<HTMLInputElement | null> }> = ({ searchInputRef }) => {
+  const router = createBrowserRouter([
+    {
+      path: "/",
+      element: <AppLayout searchInputRef={searchInputRef} />,
+      children: [
+        {
+          index: true,
+          element: <MainPage />
+        },
+        {
+          path: "/account/profile",
+          element: <ProfilePage />,
+        },
+        {
+          path: "/account/settings",
+          element: <SettingsPage />,
+        },
+        {
+          path: "/settings/*",
+          element: <SystemSettingsPage />,
+        },
+        {
+          path: "/cb",
+          element: <CBPage />,
+        },
+        {
+          path: "/cb/salaries",
+          element: <SalariesPage />,
+        },
+        {
+          path: "/cb/bonuses",
+          element: <BonusesPage />,
+        },
+        {
+          path: "/cb/market-analytics",
+          element: <MarketAnalyticsPage />,
+        },
+        {
+          path: "/account/activity-log",
+          element: (
+            <Suspense fallback={<LoadingSpinner />}>
+              <ActivityLogPage />
+            </Suspense>
+          )
+        },
+        {
+          path: "/401",
+          element: <ErrorPageWrapper errorCode={401} />
+        },
+        {
+          path: "/403",
+          element: <ErrorPageWrapper errorCode={403} />
+        },
+        {
+          path: "/404",
+          element: <ErrorPageWrapper errorCode={404} />
+        },
+        {
+          path: "/500",
+          element: <ErrorPageWrapper errorCode={500} />
+        },
+        {
+          path: "/503",
+          element: <ErrorPageWrapper errorCode={503} />
+        },
+        {
+          path: "/settings/general",
+          element: <SystemGeneralSettings />,
+        },
+        {
+          path: "/settings/users",
+          element: <SystemUsersSettings />,
+        },
+        {
+          path: "/settings/security",
+          element: <SystemSecuritySettings />,
+        },
+        {
+          path: "/settings/integrations",
+          element: <SystemIntegrationsSettings />,
+        },
+        {
+          path: "/settings/theme",
+          element: <SystemThemeSettings />,
+        },
+        {
+          path: "/cb/benefits",
+          element: <div className="content-area"><h2>Управление льготами</h2><p>Страница в разработке...</p></div>,
+        },
+        {
+          path: "/cb/calculator",
+          element: <div className="content-area"><h2>Калькулятор компенсаций</h2><p>Страница в разработке...</p></div>,
+        },
+        {
+          path: "/cb/grades",
+          element: <div className="content-area"><h2>Управление грейдами</h2><p>Страница в разработке...</p></div>,
+        },
+        {
+          path: "/components/demo",
+          element: <ComponentsDemoPage />,
+        },
+        {
+          path: "*",
+          element: <ErrorPageWrapper errorCode={404} />,
+        },
+      ],
+    },
+    {
+      path: "/login",
+      element: <LoginPage />,
+    },
+    {
+      path: "/account/password/reset",
+      element: <ResetPasswordPage />,
+    },
+    {
+      path: "/account/password/new",
+      element: <NewPasswordPage />,
+    }
+  ]);
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <AppLayout />,
-    children: [
-      {
-        index: true,
-        element: <MainPage />
-      },
-      {
-        path: "/account/profile",
-        element: <ProfilePage />,
-      },
-      {
-        path: "/account/settings",
-        element: <SettingsPage />,
-      },
-      {
-        path: "/settings/*",
-        element: <SystemSettingsPage />,
-      },
-      {
-        path: "/cb",
-        element: <CBPage />,
-      },
-      {
-        path: "/cb/salaries",
-        element: <SalariesPage />,
-      },
-      {
-        path: "/cb/bonuses",
-        element: <BonusesPage />,
-      },
-      {
-        path: "/cb/market-analytics",
-        element: <MarketAnalyticsPage />,
-      },
-      {
-        path: "/account/activity-log",
-        element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ActivityLogPage />
-          </Suspense>
-        )
-      },
-      {
-        path: "/401",
-        element: <ErrorPageWrapper errorCode={401} />
-      },
-      {
-        path: "/403",
-        element: <ErrorPageWrapper errorCode={403} />
-      },
-      {
-        path: "/404",
-        element: <ErrorPageWrapper errorCode={404} />
-      },
-      {
-        path: "/500",
-        element: <ErrorPageWrapper errorCode={500} />
-      },
-      {
-        path: "/503",
-        element: <ErrorPageWrapper errorCode={503} />
-      },
-      {
-        path: "/settings/general",
-        element: <SystemGeneralSettings />,
-      },
-      {
-        path: "/settings/users",
-        element: <SystemUsersSettings />,
-      },
-      {
-        path: "/settings/security",
-        element: <SystemSecuritySettings />,
-      },
-      {
-        path: "/settings/integrations",
-        element: <SystemIntegrationsSettings />,
-      },
-      {
-        path: "/settings/theme",
-        element: <SystemThemeSettings />,
-      },
-      {
-        path: "/cb/benefits",
-        element: <div className="content-area"><h2>Управление льготами</h2><p>Страница в разработке...</p></div>,
-      },
-      {
-        path: "/cb/calculator",
-        element: <div className="content-area"><h2>Калькулятор компенсаций</h2><p>Страница в разработке...</p></div>,
-      },
-      {
-        path: "/cb/grades",
-        element: <div className="content-area"><h2>Управление грейдами</h2><p>Страница в разработке...</p></div>,
-      },
-      {
-        path: "/components/demo",
-        element: <ComponentsDemoPage />,
-      },
-      {
-        path: "*",
-        element: <ErrorPageWrapper errorCode={404} />,
-      },
-    ],
-  },
-  {
-    path: "/login",
-    element: <LoginPage />,
-  },
-  {
-    path: "/account/password/reset",
-    element: <ResetPasswordPage />,
-  },
-  {
-    path: "/account/password/new",
-    element: <NewPasswordPage />,
-  }
-]);
+  return (
+    <AppProvider>
+      <ToastProvider>
+        <ToastContainer />
+        <RouterProvider router={router} />
+      </ToastProvider>
+    </AppProvider>
+  );
+};
 
 function App() {
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toLowerCase().includes('mac');
+      if ((isMac && e.metaKey && e.key.toLowerCase() === 'k') || (!isMac && e.ctrlKey && e.key.toLowerCase() === 'k')) {
+        e.preventDefault();
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
-    <AppWithProviders />
+    <AppWithProviders searchInputRef={searchInputRef} />
   );
 }
 

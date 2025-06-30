@@ -81,13 +81,18 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-const Navigation: React.FC = () => {
+interface NavigationProps {
+  searchInputRef?: React.RefObject<HTMLInputElement | null>;
+}
+
+const Navigation: React.FC<NavigationProps> = ({ searchInputRef }) => {
   const { state, dispatch, addToast } = useAppContext();
   const { currentUser, notifications } = state;
   const unreadNotifications = notifications.filter((n: any) => !n.read).length;
   
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const location = useLocation();
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const handleThemeToggle = () => {
     // Закрываем dropdown при переключении темы
@@ -99,12 +104,6 @@ const Navigation: React.FC = () => {
     // Закрываем dropdown при открытии панели
     setProfileDropdownOpen(false);
     dispatch({ type: 'TOGGLE_QUICK_PANEL' });
-  };
-  
-  const handleMobileSearchToggle = () => {
-    // Закрываем dropdown при поиске
-    setProfileDropdownOpen(false);
-    dispatch({ type: 'TOGGLE_MOBILE_SEARCH' });
   };
   
   const handleNotificationClick = () => {
@@ -148,7 +147,10 @@ const Navigation: React.FC = () => {
     e.currentTarget.style.backgroundColor = 'transparent';
     e.currentTarget.style.color = 'var(--bs-body-color)';
   };
-  
+
+  const isMac = typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('mac');
+  const shortcutLabel = isMac ? '⌘K' : 'Ctrl+K';
+
   return (
     <nav className="main-nav" onClick={(e) => {
       // Закрываем dropdown при клике на навигацию, но не на сами dropdown кнопки
@@ -166,18 +168,19 @@ const Navigation: React.FC = () => {
         <div className="quick-actions">
           <div className="search-container d-none d-md-block">
             <i className="bi bi-search search-icon"></i>
-            <input 
-              type="text" 
-              className="search-input" 
-              placeholder="Поиск..." 
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Поиск..."
+              ref={searchInputRef}
               onClick={() => {
                 setProfileDropdownOpen(false);
               }}
             />
-            <span className="search-shortcut">Ctrl+K</span>
+            <span className="search-shortcut">{shortcutLabel}</span>
           </div>
 
-          <button className="quick-action-btn d-md-none" onClick={handleMobileSearchToggle}>
+          <button className="quick-action-btn d-md-none" onClick={() => setMobileSearchOpen(true)}>
             <i className="bi bi-search"></i>
           </button>
 
@@ -267,18 +270,18 @@ const Navigation: React.FC = () => {
           </div>
         </div>
 
-        {state.mobileSearchOpen && (
+        {mobileSearchOpen && (
           <div className="mobile-search-container active">
-            <input 
-              type="text" 
-              className="mobile-search-input" 
-              placeholder="Поиск..." 
-              autoFocus 
+            <input
+              type="text"
+              className="mobile-search-input"
+              placeholder="Поиск..."
+              autoFocus
               onClick={() => {
                 setProfileDropdownOpen(false);
               }}
             />
-            <button className="mobile-search-close" onClick={handleMobileSearchToggle}>
+            <button className="mobile-search-close" onClick={() => setMobileSearchOpen(false)}>
               <i className="bi bi-x-lg"></i>
             </button>
           </div>
