@@ -427,9 +427,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             // Для градиента: задаем переменную --tray-gradient и fallback для --bs-primary
             document.documentElement.style.setProperty('--tray-gradient', accentColor);
             
-            // Для совместимости: основной цвет для текста и иконок — берем первый цвет из градиента
+            // Применяем градиент как основной акцентный цвет
+            document.documentElement.style.setProperty('--bs-primary', accentColor);
+            
+            // Для совместимости: берем первый цвет из градиента для RGB и других переменных
             const firstColor = accentColor.match(/#([0-9a-fA-F]{6})/g)?.[0] || '#0d6efd';
-            document.documentElement.style.setProperty('--bs-primary', firstColor);
             document.documentElement.style.setProperty('--bs-primary-rgb', hexToRgb(firstColor));
             
             const hsl = hexToHsl(firstColor);
@@ -439,9 +441,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 document.documentElement.style.setProperty('--bs-primary-border-subtle', `hsl(${hsl.h}, ${hsl.s}%, 85%)`);
             }
             
-            document.documentElement.style.setProperty('--bs-btn-primary-bg', firstColor);
+            // Для кнопок и ссылок используем градиент
+            document.documentElement.style.setProperty('--bs-btn-primary-bg', accentColor);
             document.documentElement.style.setProperty('--bs-btn-primary-border-color', firstColor);
-            document.documentElement.style.setProperty('--bs-btn-primary-hover-bg', darkenColor(firstColor, 10));
+            document.documentElement.style.setProperty('--bs-btn-primary-hover-bg', accentColor);
             document.documentElement.style.setProperty('--bs-btn-primary-hover-border-color', darkenColor(firstColor, 10));
             document.documentElement.style.setProperty('--bs-link-color', firstColor);
             document.documentElement.style.setProperty('--bs-link-hover-color', darkenColor(firstColor, 15));

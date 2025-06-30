@@ -924,9 +924,9 @@
 }
 
 .tab-button.active {
-  color: var(--bs-primary);
-  border-bottom-color: var(--bs-primary);
-  background: var(--bs-body-bg);
+  background: var(--bs-primary);
+  color: #fff;
+  border-color: var(--bs-btn-primary-border-color, #0d6efd);
 }
 
 .tab-button.active::after {

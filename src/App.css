@@ -232,8 +232,8 @@ body {
 }
 
 .submenu-item.active {
-    background-color: var(--bs-primary);
-    color: white;
+    background: var(--bs-primary);
+    color: #fff;
 }
 
 .module-grid {
