@@ -765,8 +765,8 @@ const SystemUsersSettings: React.FC = () => {
               </div>
               
               <div className="modal-footer justify-content-end">
-                <button type="button" className="btn fixed-save-btn-modal" onClick={handleSaveUser}>
-                  <i className="bi bi-save me-2"></i>Сохранить
+                <button type="button" className="btn btn-outline-primary btn-sm w-100 add-model-btn" onClick={handleSaveUser}>
+                  <i className="bi bi-save me-1"></i>Сохранить
                 </button>
               </div>
             </div>

@@ -1843,6 +1843,7 @@
   padding: 1rem;
   z-index: 10;
   box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  align-items: center !important;
 }
 
 .modal-footer.justify-content-center .btn {
@@ -4280,4 +4281,13 @@
   .popover-footer {
     padding: 10px 12px;
   }
+}
+
+.add-model-btn {
+  min-width: 0 !important;
+  padding: 0.4rem 1rem !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.9rem !important;
+  height: auto !important;
+  line-height: 1.2 !important;
 }
