@@ -33,8 +33,10 @@ const SystemThemeSettings: React.FC = () => {
   } = useAppContext();
 
   const [customColor, setCustomColor] = useState(
-    !allAccentColors.some(c => c.key === selectedAccent) ? selectedAccent : '#0d6efd'
+    !allAccentColors.some(c => c.key === selectedAccent) ? selectedAccent : '#475c7b'
   );
+
+  const [showCustomColorPopover, setShowCustomColorPopover] = useState(false);
 
   // Загружаем сохраненные настройки из localStorage или используем значения по умолчанию
   const loadSavedSettings = () => {
@@ -80,6 +82,15 @@ const SystemThemeSettings: React.FC = () => {
     const newColor = e.target.value;
     setCustomColor(newColor);
     handleSettingsChange('accentColor', newColor);
+  };
+
+  const handleCustomColorCardClick = () => {
+    setShowCustomColorPopover(!showCustomColorPopover);
+  };
+
+  const handleCustomColorApply = () => {
+    handleSettingsChange('accentColor', customColor);
+    setShowCustomColorPopover(false);
   };
 
   const handleSave = () => {
@@ -163,23 +174,77 @@ const SystemThemeSettings: React.FC = () => {
                     </div>
                   </div>
                 ))}
-              </div>
-
-              <h4 className="mt-4">Свой цвет</h4>
-              <div className="custom-color-picker">
-                <input 
-                  type="color" 
-                  className="form-control form-control-color"
-                  value={customColor.startsWith('#') ? customColor : '#ffffff'}
-                  onChange={handleCustomColorChange}
-                />
-                <input 
-                  type="text"
-                  className="form-control"
-                  placeholder="Напр. #2E8B57 или linear-gradient(...)"
-                  value={customColor}
-                  onChange={handleCustomColorChange}
-                />
+                {/* Кастомный цвет как карточка с popover */}
+                <div className="custom-color-wrapper" style={{ position: 'relative' }}>
+                  <div
+                    className={`accent-color-card ${settings.accentColor.startsWith('#') || settings.accentColor.startsWith('linear-gradient') ? 'active' : ''}`}
+                    onClick={handleCustomColorCardClick}
+                  >
+                    <div className="accent-preview" style={{ background: customColor }}>
+                      <div className="accent-preview-content">
+                        <div className="preview-button"></div>
+                        <div className="preview-link"></div>
+                      </div>
+                    </div>
+                    <div className="accent-info">
+                      <span className="accent-name">Свой цвет</span>
+                      {(settings.accentColor.startsWith('#') || settings.accentColor.startsWith('linear-gradient')) && (
+                        <i className="bi bi-check-circle-fill accent-selected"></i>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Popover для настройки кастомного цвета */}
+                  {showCustomColorPopover && (
+                    <div className="custom-color-popover">
+                      <div className="popover-header">
+                        <h6>Цвет</h6>
+                        <button 
+                          type="button" 
+                          className="btn-close" 
+                          onClick={() => setShowCustomColorPopover(false)}
+                          aria-label="Закрыть"
+                        ></button>
+                      </div>
+                      <div className="popover-body">
+                        <div className="form-group">
+                          <input
+                            type="color"
+                            className="form-control form-control-color"
+                            value={customColor.startsWith('#') ? customColor : '#475c7b'}
+                            onChange={handleCustomColorChange}
+                            title="Выбрать цвет"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="#475c7b или linear-gradient(...)"
+                            value={customColor}
+                            onChange={handleCustomColorChange}
+                          />
+                        </div>
+                      </div>
+                      <div className="popover-footer">
+                        <button 
+                          type="button" 
+                          className="btn btn-primary btn-sm"
+                          onClick={handleCustomColorApply}
+                        >
+                          Применить
+                        </button>
+                        <button 
+                          type="button" 
+                          className="btn btn-light btn-sm"
+                          onClick={() => setShowCustomColorPopover(false)}
+                        >
+                          Отмена
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
