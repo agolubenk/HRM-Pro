@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import Toast from './Toast';
-import './Toast.css';
+import './components.css';
 
 const ToastContainer: React.FC = () => {
     const { toasts, removeToast, minimizeToast, pinToast } = useAppContext();

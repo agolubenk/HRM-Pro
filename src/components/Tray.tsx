@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useAppContext } from '../context/AppContext';
-import './Tray.css';
+import './components.css';
 
 // Утилита для получения иконки по типу
 const getItemIcon = (type: 'task' | 'notification' | 'module' | 'article' | 'meeting'): string => {
     const icons = {
-        task: 'bi-check2-square',
-        notification: 'bi-bell',
-        module: 'bi-grid-1x2',
+        task: 'bi-check2-square-fill',
+        notification: 'bi-bell-fill',
+        module: 'bi-box-fill',
         article: 'bi-file-text',
-        meeting: 'bi-calendar-event',
+        meeting: 'bi-calendar-event-fill',
     };
     return icons[type] || 'bi-question-circle';
 };
@@ -29,7 +29,7 @@ const Tray: React.FC = () => {
 
     // Унификация всех элементов для трея
     const pinnedItems = useMemo((): TrayItem[] => {
-        const truncate = (text: string, length = 35) => 
+        const truncate = (text: string, length = 45) => 
             text.length > length ? text.substring(0, length - 1) + '…' : text;
 
         // Закрепленные задачи
@@ -38,7 +38,7 @@ const Tray: React.FC = () => {
                 const task = stateTasks.find(t => t.id === id);
                 if (!task) return null;
                 
-                let itemType: 'task' | 'article' | 'meeting' = 'task';
+                let itemType: 'task' | 'article' | 'meeting' | 'module' = 'task';
                 let displayText = task.text;
                 
                 if (task.text.startsWith('Статья:')) {
@@ -47,6 +47,9 @@ const Tray: React.FC = () => {
                 } else if (task.text.startsWith('Встреча:')) {
                     itemType = 'meeting';
                     displayText = task.text.replace('Встреча:', '').trim();
+                } else if (task.text.startsWith('Модуль:')) {
+                    itemType = 'module';
+                    displayText = task.text.replace('Модуль:', '').trim();
                 }
                 
                 return {
@@ -66,7 +69,7 @@ const Tray: React.FC = () => {
                 return notification ? {
                     id: notification.id,
                     type: 'notification' as const,
-                    text: truncate(notification.title),
+                    text: truncate(notification.message),
                     icon: getItemIcon('notification'),
                     originalItem: notification,
                 } : null;
@@ -139,9 +142,15 @@ const Tray: React.FC = () => {
         };
     }, [isDropdownVisible]);
 
+    useEffect(() => {
+        if (isDropdownVisible && dropdownRef.current) {
+            dropdownRef.current.scrollTop = dropdownRef.current.scrollHeight;
+        }
+    }, [isDropdownVisible]);
+
     const handleRemoveItem = (item: TrayItem, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (item.type === 'task' || item.type === 'article' || item.type === 'meeting') {
+        if (item.type === 'task' || item.type === 'article' || item.type === 'meeting' || item.type === 'module') {
             dispatch({ type: 'UNPIN_TASK', payload: item.id as number });
         } else if (item.type === 'notification') {
             closeTask(item.id as number);
@@ -153,7 +162,7 @@ const Tray: React.FC = () => {
         if (item.type === 'notification') {
             restoreTask(item.id as number);
             dispatch({ type: 'UNPIN_NOTIFICATION', payload: item.id as number });
-        } else if (item.type === 'task' || item.type === 'article' || item.type === 'meeting') {
+        } else if (item.type === 'task' || item.type === 'article' || item.type === 'meeting' || item.type === 'module') {
             dispatch({ type: 'UNPIN_TASK', payload: item.id as number });
         }
     };

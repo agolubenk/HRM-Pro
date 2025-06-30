@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import './RegisterModal.css';
+import './components.css';
 
 interface RegisterModalProps {
     show: boolean;

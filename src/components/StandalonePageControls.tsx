@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAppContext } from '../context/AppContext';
 import LanguageSwitcher from './LanguageSwitcher';
-import './StandalonePageControls.css';
+import './components.css';
 
 const StandalonePageControls: React.FC = () => {
     const { state, dispatch } = useAppContext();

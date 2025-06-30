@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import './Toast.css';
+import './components.css';
 import { ToastMessage, ToastType } from '../types';
 
 const toastIcons: Record<ToastType, string> = {

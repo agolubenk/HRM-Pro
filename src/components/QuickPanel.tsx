@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { storage, getModuleData } from '../utils';
 import { STORAGE_KEYS, MODULES } from '../constants';
-import './QuickPanel.css';
+import './components.css';
 import { ContextMenu } from './ContextMenu';
 import { Module } from '../types';
+import { useActiveModule } from '../hooks/useActiveModule';
+import { useContextMenu } from '../utils/useContextMenu';
 
 const CollapsibleSection: React.FC<{ title: string; sectionId: string; children: React.ReactNode }> = ({ title, sectionId, children }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -40,35 +42,9 @@ const QuickPanel: React.FC = () => {
   const navigate = useNavigate();
   const allModules = getModuleData();
   const { favoriteModules } = state;
+  const { contextMenu, closeContextMenu, handleContextMenu } = useContextMenu();
   
   const favoriteModuleObjects = allModules.filter(m => favoriteModules.includes(m.key));
-
-  const [contextMenu, setContextMenu] = useState<{
-    visible: boolean;
-    position: { top: number; left: number };
-    selectedModule: Module | null;
-  }>({
-    visible: false,
-    position: { top: 0, left: 0 },
-    selectedModule: null
-  });
-
-  const handleContextMenu = (e: React.MouseEvent, module: Module) => {
-    e.preventDefault();
-    setContextMenu({
-      visible: true,
-      position: { top: e.clientY, left: e.clientX },
-      selectedModule: module
-    });
-  };
-
-  const closeContextMenu = () => {
-    setContextMenu({
-      visible: false,
-      position: { top: 0, left: 0 },
-      selectedModule: null
-    });
-  };
 
   const handleModuleSelect = (module: Module) => {
     try {
@@ -148,13 +124,15 @@ const QuickPanel: React.FC = () => {
         </CollapsibleSection>
       </div>
       
-      <ContextMenu 
-          isVisible={contextMenu.visible}
-          position={contextMenu.position}
-          items={[]}
-          onClose={closeContextMenu}
-          selectedModule={contextMenu.selectedModule || undefined}
-      />
+      {contextMenu.visible && contextMenu.selectedModule && (
+        <ContextMenu 
+            isVisible={contextMenu.visible}
+            top={contextMenu.mouseY}
+            left={contextMenu.mouseX}
+            onClose={closeContextMenu}
+            selectedModule={contextMenu.selectedModule}
+        />
+      )}
     </>
   );
 };

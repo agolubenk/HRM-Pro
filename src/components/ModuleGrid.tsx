@@ -5,6 +5,7 @@ import { getModuleData } from '../utils';
 import { Module } from '../types';
 import { ContextMenu } from './ContextMenu';
 import { MODULES } from '../constants';
+import { useContextMenu } from '../utils/useContextMenu';
 
 const ModuleCard: React.FC<{ module: Module; onContextMenu: (e: React.MouseEvent, module: Module) => void; isFavorite: boolean }> = ({ module, onContextMenu, isFavorite }) => {
     const { state, dispatch } = useAppContext();
@@ -61,33 +62,7 @@ const ModuleGrid: React.FC = () => {
     const { state } = useAppContext();
     const modules = getModuleData();
     const { favoriteModules } = state;
-
-    const [contextMenu, setContextMenu] = useState<{
-        visible: boolean;
-        position: { top: number; left: number };
-        selectedModule: Module | null;
-    }>({
-        visible: false,
-        position: { top: 0, left: 0 },
-        selectedModule: null
-    });
-
-    const handleContextMenu = (e: React.MouseEvent, module: Module) => {
-        e.preventDefault();
-        setContextMenu({
-            visible: true,
-            position: { top: e.clientY, left: e.clientX },
-            selectedModule: module
-        });
-    };
-
-    const closeContextMenu = () => {
-        setContextMenu({
-            visible: false,
-            position: { top: 0, left: 0 },
-            selectedModule: null
-        });
-    };
+    const { contextMenu, closeContextMenu, handleContextMenu } = useContextMenu();
 
     return (
         <>
@@ -101,13 +76,15 @@ const ModuleGrid: React.FC = () => {
                     />
                 )}
             </div>
-            <ContextMenu 
-                isVisible={contextMenu.visible}
-                position={contextMenu.position}
-                items={[]}
-                onClose={closeContextMenu}
-                selectedModule={contextMenu.selectedModule || undefined}
-            />
+            {contextMenu.visible && contextMenu.selectedModule && (
+                <ContextMenu 
+                    isVisible={contextMenu.visible}
+                    top={contextMenu.mouseY}
+                    left={contextMenu.mouseX}
+                    onClose={closeContextMenu}
+                    selectedModule={contextMenu.selectedModule}
+                />
+            )}
         </>
     );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import './StatWidgets.css';
+import './components.css';
 
 interface StatWidgetProps {
   value: string | number;

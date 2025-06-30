@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './FormBuilder.css';
+import '../components.css';
 
 interface FieldOption {
   value: string;

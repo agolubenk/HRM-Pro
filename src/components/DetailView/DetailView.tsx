@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './DetailView.css';
+import '../components.css';
 
 interface Tab {
   id: string;

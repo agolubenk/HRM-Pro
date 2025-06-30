@@ -1,5 +1,5 @@
 import React from 'react';
-import './BulkActions.css';
+import '../components.css';
 
 interface BulkAction {
   label: string;
