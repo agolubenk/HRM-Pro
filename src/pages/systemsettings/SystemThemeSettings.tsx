@@ -147,182 +147,175 @@ const SystemThemeSettings: React.FC = () => {
       </div>
 
       <div className="settings-content-wrapper">
-        <div className="row g-4">
-          {/* Левая колонка с цветами */}
-          <div className="col-12 col-lg-7">
-            <div className="settings-section h-100">
-              <div className="settings-section-header">
-                <i className="bi bi-droplet-half"></i>
-                <h3>Акцентный цвет</h3>
-              </div>
-              <div className="accent-colors-grid">
-                {allAccentColors.map(color => (
-                  <div
-                    key={color.key}
-                    className={`accent-color-card ${settings.accentColor === color.key ? 'active' : ''}`}
-                    onClick={() => handleSettingsChange('accentColor', color.key)}
-                  >
-                    <div className="accent-preview" style={{ background: color.preview }}>
-                      <div className="accent-preview-content">
-                        <div className="preview-button"></div>
-                        <div className="preview-link"></div>
-                      </div>
-                    </div>
-                    <div className="accent-info">
-                      <span className="accent-name">{color.name}</span>
-                      {settings.accentColor === color.key && <i className="bi bi-check-circle-fill accent-selected"></i>}
+        <div className="settings-grid">
+          <div className="settings-section h-100">
+            <div className="settings-section-header">
+              <i className="bi bi-droplet-half"></i>
+              <h3>Акцентный цвет</h3>
+            </div>
+            <div className="accent-colors-grid">
+              {allAccentColors.map(color => (
+                <div
+                  key={color.key}
+                  className={`accent-color-card ${settings.accentColor === color.key ? 'active' : ''}`}
+                  onClick={() => handleSettingsChange('accentColor', color.key)}
+                >
+                  <div className="accent-preview" style={{ background: color.preview }}>
+                    <div className="accent-preview-content">
+                      <div className="preview-button"></div>
+                      <div className="preview-link"></div>
                     </div>
                   </div>
-                ))}
-                {/* Кастомный цвет как карточка с popover */}
-                <div className="custom-color-wrapper" style={{ position: 'relative' }}>
-                  <div
-                    className={`accent-color-card ${settings.accentColor.startsWith('#') || settings.accentColor.startsWith('linear-gradient') ? 'active' : ''}`}
-                    onClick={handleCustomColorCardClick}
-                  >
-                    <div className="accent-preview" style={{ background: customColor }}>
-                      <div className="accent-preview-content">
-                        <div className="preview-button"></div>
-                        <div className="preview-link"></div>
-                      </div>
-                    </div>
-                    <div className="accent-info">
-                      <span className="accent-name">Свой цвет</span>
-                      {(settings.accentColor.startsWith('#') || settings.accentColor.startsWith('linear-gradient')) && (
-                        <i className="bi bi-check-circle-fill accent-selected"></i>
-                      )}
-                    </div>
+                  <div className="accent-info">
+                    <span className="accent-name">{color.name}</span>
+                    {settings.accentColor === color.key && <i className="bi bi-check-circle-fill accent-selected"></i>}
                   </div>
-                  
-                  {/* Popover для настройки кастомного цвета */}
-                  {showCustomColorPopover && (
-                    <div className="custom-color-popover">
-                      <div className="popover-header">
-                        <h6>Цвет</h6>
-                        <button 
-                          type="button" 
-                          className="btn-close" 
-                          onClick={() => setShowCustomColorPopover(false)}
-                          aria-label="Закрыть"
-                        ></button>
-                      </div>
-                      <div className="popover-body">
-                        <div className="form-group">
-                          <input
-                            type="color"
-                            className="form-control form-control-color"
-                            value={customColor.startsWith('#') ? customColor : '#475c7b'}
-                            onChange={handleCustomColorChange}
-                            title="Выбрать цвет"
-                          />
-                        </div>
-                        <div className="form-group">
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="#475c7b или linear-gradient(...)"
-                            value={customColor}
-                            onChange={handleCustomColorChange}
-                          />
-                        </div>
-                      </div>
-                      <div className="popover-footer">
-                        <button 
-                          type="button" 
-                          className="btn btn-primary btn-sm"
-                          onClick={handleCustomColorApply}
-                        >
-                          Применить
-                        </button>
-                        <button 
-                          type="button" 
-                          className="btn btn-light btn-sm"
-                          onClick={() => setShowCustomColorPopover(false)}
-                        >
-                          Отмена
-                        </button>
-                      </div>
-                    </div>
-                  )}
                 </div>
+              ))}
+              {/* Кастомный цвет как карточка с popover */}
+              <div className="custom-color-wrapper" style={{ position: 'relative' }}>
+                <div
+                  className={`accent-color-card ${settings.accentColor.startsWith('#') || settings.accentColor.startsWith('linear-gradient') ? 'active' : ''}`}
+                  onClick={handleCustomColorCardClick}
+                >
+                  <div className="accent-preview" style={{ background: customColor }}>
+                    <div className="accent-preview-content">
+                      <div className="preview-button"></div>
+                      <div className="preview-link"></div>
+                    </div>
+                  </div>
+                  <div className="accent-info">
+                    <span className="accent-name">Свой цвет</span>
+                    {(settings.accentColor.startsWith('#') || settings.accentColor.startsWith('linear-gradient')) && (
+                      <i className="bi bi-check-circle-fill accent-selected"></i>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Popover для настройки кастомного цвета */}
+                {showCustomColorPopover && (
+                  <div className="custom-color-popover">
+                    <div className="popover-header">
+                      <h6>Цвет</h6>
+                      <button 
+                        type="button" 
+                        className="btn-close" 
+                        onClick={() => setShowCustomColorPopover(false)}
+                        aria-label="Закрыть"
+                      ></button>
+                    </div>
+                    <div className="popover-body">
+                      <div className="form-group">
+                        <input
+                          type="color"
+                          className="form-control form-control-color"
+                          value={customColor.startsWith('#') ? customColor : '#475c7b'}
+                          onChange={handleCustomColorChange}
+                          title="Выбрать цвет"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="#475c7b или linear-gradient(...)"
+                          value={customColor}
+                          onChange={handleCustomColorChange}
+                        />
+                      </div>
+                    </div>
+                    <div className="popover-footer">
+                      <button 
+                        type="button" 
+                        className="btn btn-primary btn-sm"
+                        onClick={handleCustomColorApply}
+                      >
+                        Применить
+                      </button>
+                      <button 
+                        type="button" 
+                        className="btn btn-light btn-sm"
+                        onClick={() => setShowCustomColorPopover(false)}
+                      >
+                        Отмена
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-
-          {/* Правая колонка с настройками */}
-          <div className="col-12 col-lg-5">
-            <div className="settings-section h-100">
-              <div className="settings-section-header">
-                <i className="bi bi-gear"></i>
-                <h3>Дополнительные настройки</h3>
+          <div className="settings-section h-100">
+            <div className="settings-section-header">
+              <i className="bi bi-gear"></i>
+              <h3>Дополнительные настройки</h3>
+            </div>
+            <div className="settings-form">
+              <div className="form-group">
+                <label className="form-label">Анимации</label>
+                <select 
+                  className="form-select" 
+                  value={settings.animations}
+                  onChange={(e) => handleSettingsChange('animations', e.target.value)}
+                >
+                  <option value="enabled">Включены</option>
+                  <option value="reduced">Уменьшенные</option>
+                  <option value="disabled">Отключены</option>
+                </select>
+                <div className="form-text">Анимации переходов и эффектов в интерфейсе.</div>
               </div>
-              <div className="settings-form">
-                <div className="form-group">
-                  <label className="form-label">Анимации</label>
-                  <select 
-                    className="form-select" 
-                    value={settings.animations}
-                    onChange={(e) => handleSettingsChange('animations', e.target.value)}
-                  >
-                    <option value="enabled">Включены</option>
-                    <option value="reduced">Уменьшенные</option>
-                    <option value="disabled">Отключены</option>
-                  </select>
-                  <div className="form-text">Анимации переходов и эффектов в интерфейсе.</div>
+              <div className="form-group">
+                <label className="form-label">Отображение сетки</label>
+                <select 
+                  className="form-select" 
+                  value={settings.gridDisplay}
+                  onChange={(e) => handleSettingsChange('gridDisplay', e.target.value)}
+                >
+                  <option value="auto">Авто</option>
+                  <option value="compact">Компактная</option>
+                  <option value="spacious">Просторная</option>
+                </select>
+                <div className="form-text">Стиль отображения сеток и таблиц.</div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Скругление углов</label>
+                <select 
+                  className="form-select" 
+                  value={settings.borderRadius}
+                  onChange={(e) => handleSettingsChange('borderRadius', e.target.value)}
+                >
+                  <option value="none">Без скругления</option>
+                  <option value="small">Малое</option>
+                  <option value="medium">Среднее</option>
+                  <option value="large">Большое</option>
+                </select>
+                <div className="form-text">Скругление углов у карточек и кнопок.</div>
+              </div>
+              <div className="form-group">
+                <div className="form-check form-switch form-check-lg">
+                  <input 
+                    className="form-check-input" 
+                    type="checkbox" 
+                    id="shadows" 
+                    checked={settings.shadows} 
+                    onChange={(e) => handleSettingsChange('shadows', e.target.checked)} 
+                  />
+                  <label className="form-check-label" htmlFor="shadows">Тени элементов</label>
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Отображение сетки</label>
-                  <select 
-                    className="form-select" 
-                    value={settings.gridDisplay}
-                    onChange={(e) => handleSettingsChange('gridDisplay', e.target.value)}
-                  >
-                    <option value="auto">Авто</option>
-                    <option value="compact">Компактная</option>
-                    <option value="spacious">Просторная</option>
-                  </select>
-                  <div className="form-text">Стиль отображения сеток и таблиц.</div>
+                <div className="form-text">Отображение теней у карточек и модальных окон.</div>
+              </div>
+              <div className="form-group">
+                <div className="form-check form-switch form-check-lg">
+                  <input 
+                    className="form-check-input" 
+                    type="checkbox" 
+                    id="transitions" 
+                    checked={settings.transitions} 
+                    onChange={(e) => handleSettingsChange('transitions', e.target.checked)} 
+                  />
+                  <label className="form-check-label" htmlFor="transitions">Плавные переходы</label>
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Скругление углов</label>
-                  <select 
-                    className="form-select" 
-                    value={settings.borderRadius}
-                    onChange={(e) => handleSettingsChange('borderRadius', e.target.value)}
-                  >
-                    <option value="none">Без скругления</option>
-                    <option value="small">Малое</option>
-                    <option value="medium">Среднее</option>
-                    <option value="large">Большое</option>
-                  </select>
-                  <div className="form-text">Скругление углов у карточек и кнопок.</div>
-                </div>
-                <div className="form-group">
-                  <div className="form-check form-switch form-check-lg">
-                    <input 
-                      className="form-check-input" 
-                      type="checkbox" 
-                      id="shadows" 
-                      checked={settings.shadows} 
-                      onChange={(e) => handleSettingsChange('shadows', e.target.checked)} 
-                    />
-                    <label className="form-check-label" htmlFor="shadows">Тени элементов</label>
-                  </div>
-                  <div className="form-text">Отображение теней у карточек и модальных окон.</div>
-                </div>
-                <div className="form-group">
-                  <div className="form-check form-switch form-check-lg">
-                    <input 
-                      className="form-check-input" 
-                      type="checkbox" 
-                      id="transitions" 
-                      checked={settings.transitions} 
-                      onChange={(e) => handleSettingsChange('transitions', e.target.checked)} 
-                    />
-                    <label className="form-check-label" htmlFor="transitions">Плавные переходы</label>
-                  </div>
-                  <div className="form-text">Плавные анимации при изменении состояний элементов.</div>
-                </div>
+                <div className="form-text">Плавные анимации при изменении состояний элементов.</div>
               </div>
             </div>
           </div>
