@@ -34,6 +34,7 @@ import SystemSecuritySettings from './pages/systemsettings/SystemSecuritySetting
 import SystemIntegrationsSettings from './pages/systemsettings/SystemIntegrationsSettings';
 import SystemThemeSettings from './pages/systemsettings/SystemThemeSettings';
 import ComponentsDemoPage from './pages/components/ComponentsDemoPage';
+import ThemeSync from './components/ThemeSync';
 import { useActiveModule } from './hooks/useActiveModule';
 
 // Lazy loading для страниц, которые не загружаются сразу
@@ -78,6 +79,7 @@ const AppLayout = ({ searchInputRef }: { searchInputRef: React.RefObject<HTMLInp
 
   return (
     <div className="app-container">
+      <ThemeSync />
       <Navigation searchInputRef={searchInputRef} />
       <ModuleSubmenu />
       <QuickPanel />

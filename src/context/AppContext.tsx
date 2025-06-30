@@ -108,8 +108,8 @@ const initialState: AppState = {
     telegram: '@ivanov_admin'
   },
   notifications: storage.get('hrm_notifications') || [],
-  theme: storage.get(STORAGE_KEYS.THEME) || 'light',
-  language: storage.get(STORAGE_KEYS.LANGUAGE) || 'ru',
+  theme: localStorage.getItem('hrm_theme') || storage.get(STORAGE_KEYS.THEME) || 'light',
+  language: localStorage.getItem('hrm_language') || storage.get(STORAGE_KEYS.LANGUAGE) || 'ru',
   quickPanelOpen: false,
   mobileSearchOpen: false,
   activeModule: null,
@@ -142,13 +142,13 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, tasks: newTasksRemove, pinnedTasks: newPinnedTasksRemove };
     case 'TOGGLE_THEME':
       const newTheme = state.theme === 'light' ? 'dark' : 'light';
-      storage.set(STORAGE_KEYS.THEME, newTheme);
+      localStorage.setItem('hrm_theme', newTheme);
       return { ...state, theme: newTheme };
     case 'SET_THEME':
-      storage.set(STORAGE_KEYS.THEME, action.payload);
+      localStorage.setItem('hrm_theme', action.payload);
       return { ...state, theme: action.payload };
     case 'CHANGE_LANGUAGE':
-      storage.set(STORAGE_KEYS.LANGUAGE, action.payload);
+      localStorage.setItem('hrm_language', action.payload);
       return { ...state, language: action.payload };
     case 'TOGGLE_QUICK_PANEL':
       return { ...state, quickPanelOpen: !state.quickPanelOpen };
@@ -266,8 +266,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         storage.set('hrm_notifications', state.notifications);
         storage.set(STORAGE_KEYS.FAVORITE_MODULES, state.favoriteModules);
         storage.set(STORAGE_KEYS.SELECTED_WIDGETS, selectedWidgetIds);
-        storage.set(STORAGE_KEYS.THEME, state.theme);
-        storage.set(STORAGE_KEYS.LANGUAGE, state.language);
+        localStorage.setItem('hrm_theme', state.theme);
+        localStorage.setItem('hrm_language', state.language);
     }, [state, tasks, selectedWidgetIds]);
 
     // Сохраняем данные при каждом изменении состояния
@@ -488,6 +488,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // Применяем тему из state при изменении
     useEffect(() => {
         document.documentElement.setAttribute('data-bs-theme', state.theme);
+        console.log('Тема применена:', state.theme);
     }, [state.theme]);
 
     // Применяем настройки анимаций при изменении настроек темы

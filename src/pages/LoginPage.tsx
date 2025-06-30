@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import './LoginPage.css';
 import RegisterModal from '../components/RegisterModal';
 import StandalonePageControls from '../components/StandalonePageControls';
+import ThemeSync from '../components/ThemeSync';
 import { AppProvider } from '../context/AppContext';
 
 const LoginPageContent: React.FC = () => {
@@ -17,6 +18,7 @@ const LoginPageContent: React.FC = () => {
 
     return (
         <>
+            <ThemeSync />
             <StandalonePageControls />
             <div className="login-container">
                 <div className="login-card">
@@ -48,7 +50,7 @@ const LoginPageContent: React.FC = () => {
                         <button type="submit" className="btn btn-login w-100 mt-4">Войти</button>
                     </form>
                     <div className="login-footer mt-4">
-                        <button type="button" className="btn btn-outline-primary" onClick={() => setShowRegisterModal(true)}>
+                        <button type="button" className="btn btn-outline-primary w-100" onClick={() => setShowRegisterModal(true)}>
                             Регистрация
                         </button>
                     </div>

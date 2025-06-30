@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './LoginPage.css'; // Reusing styles from LoginPage
 import StandalonePageControls from '../components/StandalonePageControls';
+import ThemeSync from '../components/ThemeSync';
 import { AppProvider } from '../context/AppContext';
 
 const ResetPasswordPageContent: React.FC = () => {
@@ -14,6 +15,7 @@ const ResetPasswordPageContent: React.FC = () => {
 
     return (
         <>
+            <ThemeSync />
             <StandalonePageControls />
             <div className="login-container">
                 <div className="login-card">
