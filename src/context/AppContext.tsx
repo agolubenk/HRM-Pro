@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, ReactNode, useCallback, useState, useEffect } from 'react';
-import { Task, User, Notification, Language, ToastMessage, ToastType } from '../types';
+import { Task, User, Notification, Language, ToastMessage, ToastType, ThemeSettings } from '../types';
 import { storage } from '../utils';
 
 export const STORAGE_KEYS = {
@@ -31,6 +31,7 @@ interface AppState {
   pinnedTasks: number[];
   pinnedNotifications: number[];
   selectedWidgetIds: string[];
+  themeSettings: ThemeSettings;
 }
 
 type AppAction =
@@ -51,7 +52,8 @@ type AppAction =
   | { type: 'UNPIN_NOTIFICATION'; payload: number }
   | { type: 'PIN_TASK'; payload: number }
   | { type: 'UNPIN_TASK'; payload: number }
-  | { type: 'SET_SELECTED_WIDGETS'; payload: string[] };
+  | { type: 'SET_SELECTED_WIDGETS'; payload: string[] }
+  | { type: 'UPDATE_THEME_SETTINGS'; payload: Partial<ThemeSettings> };
 
 const defaultTasks: Task[] = [
     // 15 Задач
@@ -115,6 +117,14 @@ const initialState: AppState = {
   pinnedTasks: storage.get(STORAGE_KEYS.PINNED_TASKS) || [1, 2, 3, 11, 15],
   pinnedNotifications: storage.get(STORAGE_KEYS.PINNED_NOTIFICATIONS) || [],
   selectedWidgetIds: storage.get(STORAGE_KEYS.SELECTED_WIDGETS) || ['salary', 'vacation', 'courses'],
+  themeSettings: storage.get('theme-settings') || {
+    accentColor: 'primary',
+    animations: 'enabled',
+    gridDisplay: 'auto',
+    borderRadius: 'medium',
+    shadows: true,
+    transitions: true
+  },
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -191,6 +201,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'SET_SELECTED_WIDGETS':
       storage.set(STORAGE_KEYS.SELECTED_WIDGETS, action.payload);
       return { ...state, selectedWidgetIds: action.payload };
+    case 'UPDATE_THEME_SETTINGS':
+      const updatedThemeSettings = { ...state.themeSettings, ...action.payload };
+      storage.set('theme-settings', updatedThemeSettings);
+      return { ...state, themeSettings: updatedThemeSettings };
     default:
       return state;
   }
@@ -214,6 +228,8 @@ interface AppContextType {
     setSelectedTheme: (theme: string) => void;
     setSelectedAccent: (accent: string) => void;
     applyThemeAndAccent: (theme: string, accent: string) => void;
+    updateThemeSettings: (settings: Partial<ThemeSettings>) => void;
+    applyAnimationSettings: () => void;
     saveAllData: () => void;
     testStorage: () => boolean;
 }
@@ -474,6 +490,107 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         document.documentElement.setAttribute('data-bs-theme', state.theme);
     }, [state.theme]);
 
+    // Применяем настройки анимаций при изменении настроек темы
+    useEffect(() => {
+        const { animations, transitions, gridDisplay, borderRadius, shadows } = state.themeSettings;
+        
+        // Применяем настройки анимаций через CSS переменные
+        if (animations === 'disabled') {
+            document.documentElement.style.setProperty('--animation-duration', '0s');
+            document.documentElement.style.setProperty('--transition-duration', '0s');
+            document.documentElement.style.setProperty('--animation-enabled', '0');
+        } else if (animations === 'reduced') {
+            document.documentElement.style.setProperty('--animation-duration', '5s');
+            document.documentElement.style.setProperty('--transition-duration', '0.75s');
+            document.documentElement.style.setProperty('--animation-enabled', '1');
+        } else {
+            document.documentElement.style.setProperty('--animation-duration', '2s');
+            document.documentElement.style.setProperty('--transition-duration', '0.3s');
+            document.documentElement.style.setProperty('--animation-enabled', '1');
+        }
+        
+        // Применяем настройки переходов
+        if (!transitions) {
+            document.documentElement.style.setProperty('--transition-enabled', '0');
+        } else {
+            document.documentElement.style.setProperty('--transition-enabled', '1');
+        }
+        
+        // Применяем настройки отображения сетки
+        if (gridDisplay === 'compact') {
+            document.documentElement.style.setProperty('--grid-spacing', '0.5rem');
+            document.documentElement.style.setProperty('--grid-gap', '1rem');
+            document.documentElement.style.setProperty('--card-padding', '1rem');
+            document.documentElement.style.setProperty('--section-margin', '1.5rem');
+            document.documentElement.style.setProperty('--font-size-base', '0.875rem');
+            document.documentElement.style.setProperty('--line-height-base', '1.4');
+            document.documentElement.style.setProperty('--border-radius', '0.25rem');
+            // Добавляем CSS класс для компактного режима
+            document.documentElement.classList.add('grid-display-compact');
+            document.documentElement.classList.remove('grid-display-spacious');
+        } else if (gridDisplay === 'spacious') {
+            document.documentElement.style.setProperty('--grid-spacing', '1.5rem');
+            document.documentElement.style.setProperty('--grid-gap', '2rem');
+            document.documentElement.style.setProperty('--card-padding', '2rem');
+            document.documentElement.style.setProperty('--section-margin', '3rem');
+            document.documentElement.style.setProperty('--font-size-base', '1.125rem');
+            document.documentElement.style.setProperty('--line-height-base', '1.6');
+            document.documentElement.style.setProperty('--border-radius', '0.5rem');
+            // Добавляем CSS класс для просторного режима
+            document.documentElement.classList.add('grid-display-spacious');
+            document.documentElement.classList.remove('grid-display-compact');
+        } else {
+            // auto - стандартные значения
+            document.documentElement.style.setProperty('--grid-spacing', '1rem');
+            document.documentElement.style.setProperty('--grid-gap', '1.5rem');
+            document.documentElement.style.setProperty('--card-padding', '1.5rem');
+            document.documentElement.style.setProperty('--section-margin', '2rem');
+            document.documentElement.style.setProperty('--font-size-base', '1rem');
+            document.documentElement.style.setProperty('--line-height-base', '1.5');
+            document.documentElement.style.setProperty('--border-radius', '0.375rem');
+            // Убираем CSS классы режимов
+            document.documentElement.classList.remove('grid-display-compact', 'grid-display-spacious');
+        }
+        
+        // Применяем настройки скругления углов
+        if (borderRadius === 'none') {
+            document.documentElement.style.setProperty('--border-radius', '0');
+            document.documentElement.style.setProperty('--bs-border-radius', '0');
+            document.documentElement.style.setProperty('--bs-border-radius-sm', '0');
+            document.documentElement.style.setProperty('--bs-border-radius-lg', '0');
+        } else if (borderRadius === 'small') {
+            document.documentElement.style.setProperty('--border-radius', '0.25rem');
+            document.documentElement.style.setProperty('--bs-border-radius', '0.25rem');
+            document.documentElement.style.setProperty('--bs-border-radius-sm', '0.125rem');
+            document.documentElement.style.setProperty('--bs-border-radius-lg', '0.375rem');
+        } else if (borderRadius === 'large') {
+            document.documentElement.style.setProperty('--border-radius', '0.75rem');
+            document.documentElement.style.setProperty('--bs-border-radius', '0.75rem');
+            document.documentElement.style.setProperty('--bs-border-radius-sm', '0.5rem');
+            document.documentElement.style.setProperty('--bs-border-radius-lg', '1rem');
+        } else {
+            // medium - стандартные значения
+            document.documentElement.style.setProperty('--border-radius', '0.375rem');
+            document.documentElement.style.setProperty('--bs-border-radius', '0.375rem');
+            document.documentElement.style.setProperty('--bs-border-radius-sm', '0.25rem');
+            document.documentElement.style.setProperty('--bs-border-radius-lg', '0.5rem');
+        }
+        
+        // Применяем настройки теней
+        if (!shadows) {
+            document.documentElement.style.setProperty('--bs-box-shadow', 'none');
+            document.documentElement.style.setProperty('--bs-box-shadow-sm', 'none');
+            document.documentElement.style.setProperty('--bs-box-shadow-lg', 'none');
+            document.documentElement.style.setProperty('--bs-box-shadow-xl', 'none');
+        } else {
+            // Стандартные тени Bootstrap
+            document.documentElement.style.setProperty('--bs-box-shadow', '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)');
+            document.documentElement.style.setProperty('--bs-box-shadow-sm', '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)');
+            document.documentElement.style.setProperty('--bs-box-shadow-lg', '0 1rem 3rem rgba(0, 0, 0, 0.175)');
+            document.documentElement.style.setProperty('--bs-box-shadow-xl', '0 1.5rem 4rem rgba(0, 0, 0, 0.2)');
+        }
+    }, [state.themeSettings]);
+
     const contextValue: AppContextType = {
         state,
         dispatch,
@@ -492,6 +609,34 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setSelectedTheme,
         setSelectedAccent,
         applyThemeAndAccent,
+        updateThemeSettings: (settings: Partial<ThemeSettings>) => {
+            dispatch({ type: 'UPDATE_THEME_SETTINGS', payload: settings });
+        },
+        applyAnimationSettings: () => {
+            const { animations, transitions } = state.themeSettings;
+            
+            // Применяем настройки анимаций через CSS переменные
+            if (animations === 'disabled') {
+                document.documentElement.style.setProperty('--animation-duration', '0s');
+                document.documentElement.style.setProperty('--transition-duration', '0s');
+                document.documentElement.style.setProperty('--animation-enabled', '0');
+            } else if (animations === 'reduced') {
+                document.documentElement.style.setProperty('--animation-duration', '5s');
+                document.documentElement.style.setProperty('--transition-duration', '0.75s');
+                document.documentElement.style.setProperty('--animation-enabled', '1');
+            } else {
+                document.documentElement.style.setProperty('--animation-duration', '2s');
+                document.documentElement.style.setProperty('--transition-duration', '0.3s');
+                document.documentElement.style.setProperty('--animation-enabled', '1');
+            }
+            
+            // Применяем настройки переходов
+            if (!transitions) {
+                document.documentElement.style.setProperty('--transition-enabled', '0');
+            } else {
+                document.documentElement.style.setProperty('--transition-enabled', '1');
+            }
+        },
         saveAllData,
         testStorage: () => {
             try {

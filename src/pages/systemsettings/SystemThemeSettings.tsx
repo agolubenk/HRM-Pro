@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '../../context/AppContext';
+import { ThemeSettings } from '../../types';
 import './SystemSettings.css';
 
 interface AccentColor {
@@ -20,39 +21,28 @@ const allAccentColors: AccentColor[] = [
   { key: 'pink', name: 'Розовый', color: '#d63384', preview: '#d63384' },
   { key: 'teal', name: 'Бирюзовый', color: '#20c997', preview: '#20c997' },
   // Gradients
-  { key: 'blue-violet', name: 'Индиго', color: 'linear-gradient(90deg, #0d6efd 0%, #6f42c1 100%)', preview: 'linear-gradient(90deg, #0d6efd 0%, #6f42c1 100%)' },
-  { key: 'green-yellow', name: 'Лайм', color: 'linear-gradient(90deg, #198754 0%, #fd7e14 100%)', preview: 'linear-gradient(90deg, #198754 0%, #fd7e14 100%)' },
-  { key: 'pink-orange', name: 'Закат', color: 'linear-gradient(90deg, #d63384 0%, #fd7e14 100%)', preview: 'linear-gradient(90deg, #d63384 0%, #fd7e14 100%)' },
+  { key: 'blue-violet', name: 'Сине-фиолетовый', color: 'linear-gradient(90deg, #0d6efd 0%, #6f42c1 100%)', preview: 'linear-gradient(90deg, #0d6efd 0%, #6f42c1 100%)' },
+  { key: 'green-yellow', name: 'Зелено-желтый', color: 'linear-gradient(90deg, #198754 0%, #fd7e14 100%)', preview: 'linear-gradient(90deg, #198754 0%, #fd7e14 100%)' },
+  { key: 'pink-orange', name: 'Розово-оранжевый', color: 'linear-gradient(90deg, #d63384 0%, #fd7e14 100%)', preview: 'linear-gradient(90deg, #d63384 0%, #fd7e14 100%)' },
 ];
 
 const SystemThemeSettings: React.FC = () => {
-  const { 
-    selectedAccent, 
-    setSelectedAccent,
-    addToast
-  } = useAppContext();
+  const { updateThemeSettings, applyThemeAndAccent, addToast } = useAppContext();
 
-  const [customColor, setCustomColor] = useState(
-    !allAccentColors.some(c => c.key === selectedAccent) ? selectedAccent : '#475c7b'
-  );
-
-  const [showCustomColorPopover, setShowCustomColorPopover] = useState(false);
-
-  // Загружаем сохраненные настройки из localStorage или используем значения по умолчанию
-  const loadSavedSettings = () => {
-    const savedSettings = localStorage.getItem('theme-settings');
-    const savedAccent = localStorage.getItem('selected-accent') || selectedAccent;
-    
-    if (savedSettings) {
-      const parsed = JSON.parse(savedSettings);
-      return {
-        ...parsed,
-        accentColor: savedAccent // Приоритет отдаем сохраненному акцентному цвету
-      };
+  // Загружаем сохраненные настройки
+  const loadSavedSettings = (): ThemeSettings => {
+    const saved = localStorage.getItem('theme-settings');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Ошибка при загрузке настроек:', e);
+      }
     }
     
+    // Настройки по умолчанию
     return {
-      accentColor: savedAccent,
+      accentColor: 'primary',
       animations: 'enabled',
       gridDisplay: 'auto',
       borderRadius: 'medium',
@@ -61,21 +51,32 @@ const SystemThemeSettings: React.FC = () => {
     };
   };
 
-  const [baseSettings, setBaseSettings] = useState(loadSavedSettings);
-  const [settings, setSettings] = useState(baseSettings);
+  const [settings, setSettings] = useState<ThemeSettings>(() => loadSavedSettings());
+  const [originalSettings, setOriginalSettings] = useState<ThemeSettings>(() => loadSavedSettings());
   const [isDirty, setIsDirty] = useState(false);
+  const [showCustomColorPopover, setShowCustomColorPopover] = useState(false);
+  const [customColor, setCustomColor] = useState('#475c7b');
+  const [popoverPosition, setPopoverPosition] = useState<'bottom' | 'top' | 'right' | 'left' | 'fallback'>('bottom');
+  const customColorRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setSelectedAccent(settings.accentColor);
-    const hasChanges = JSON.stringify(settings) !== JSON.stringify(baseSettings);
+    const hasChanges = JSON.stringify(settings) !== JSON.stringify(originalSettings);
     setIsDirty(hasChanges);
-  }, [settings, baseSettings, setSelectedAccent]);
+  }, [settings, originalSettings]);
 
-  const handleSettingsChange = (field: keyof typeof settings, value: any) => {
-    setSettings((prev: typeof settings) => ({ ...prev, [field]: value }));
-    if (field === 'accentColor' && value.startsWith('#')) {
-      setCustomColor(value);
-    }
+  // Применяем акцентный цвет при изменении
+  useEffect(() => {
+    applyThemeAndAccent('auto', settings.accentColor);
+  }, [settings.accentColor, applyThemeAndAccent]);
+
+  const handleSettingsChange = (field: keyof ThemeSettings, value: any) => {
+    const newSettings = { ...settings, [field]: value };
+    setSettings(newSettings);
+    setIsDirty(true);
+    
+    // Немедленно применяем изменения
+    updateThemeSettings(newSettings);
   };
   
   const handleCustomColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,7 +86,42 @@ const SystemThemeSettings: React.FC = () => {
   };
 
   const handleCustomColorCardClick = () => {
-    setShowCustomColorPopover(!showCustomColorPopover);
+    // Определяем оптимальную позицию для popover
+    if (customColorRef.current) {
+      const rect = customColorRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+      const popoverHeight = 280; // Реальная высота popover
+      const popoverWidth = 320; // Реальная ширина popover
+      const margin = 16; // Отступ от края экрана
+      
+      let position: 'bottom' | 'top' | 'right' | 'left' | 'fallback' = 'bottom';
+      
+      // Проверяем, поместится ли popover снизу
+      if (rect.bottom + popoverHeight + margin <= viewportHeight) {
+        position = 'bottom';
+      }
+      // Проверяем, поместится ли popover сверху
+      else if (rect.top - popoverHeight - margin >= 0) {
+        position = 'top';
+      }
+      // Проверяем, поместится ли popover справа
+      else if (rect.right + popoverWidth + margin <= viewportWidth) {
+        position = 'right';
+      }
+      // Проверяем, поместится ли popover слева
+      else if (rect.left - popoverWidth - margin >= 0) {
+        position = 'left';
+      }
+      // Если ничего не подходит, используем fallback (центрированное модальное окно)
+      else {
+        position = 'fallback';
+      }
+      
+      setPopoverPosition(position);
+    }
+    
+    setShowCustomColorPopover(true);
   };
 
   const handleCustomColorApply = () => {
@@ -94,20 +130,28 @@ const SystemThemeSettings: React.FC = () => {
   };
 
   const handleSave = () => {
+    // Сохраняем в localStorage
     localStorage.setItem('selected-accent', settings.accentColor);
     localStorage.setItem('theme-settings', JSON.stringify(settings));
-    setBaseSettings(settings);
+    
+    // Обновляем исходные настройки
+    setOriginalSettings(settings);
+    
+    // Сбрасываем флаг изменений
+    setIsDirty(false);
+    
     addToast('Настройки внешнего вида успешно сохранены.', { type: 'success', title: 'Сохранено' });
     console.log('Настройки сохранены:', settings);
   };
 
   const handleCancel = () => {
-    setSettings(baseSettings);
+    setSettings(originalSettings);
+    setIsDirty(false);
     addToast('Изменения отменены.', { type: 'info', title: 'Отмена' });
   };
 
   const handleReset = () => {
-    const defaultSettings = {
+    const defaultSettings: ThemeSettings = {
       accentColor: 'primary',
       animations: 'enabled',
       gridDisplay: 'auto',
@@ -118,17 +162,40 @@ const SystemThemeSettings: React.FC = () => {
     
     // Устанавливаем настройки по умолчанию
     setSettings(defaultSettings);
-    setBaseSettings(defaultSettings);
+    setOriginalSettings(defaultSettings);
+    
+    // Обновляем в контексте
+    updateThemeSettings(defaultSettings);
     
     // Сразу сохраняем в localStorage
     localStorage.setItem('selected-accent', 'primary');
     localStorage.setItem('theme-settings', JSON.stringify(defaultSettings));
     
-    // Обновляем акцентный цвет в контексте
-    setSelectedAccent('primary');
+    // Сбрасываем флаг изменений
+    setIsDirty(false);
     
     addToast('Настройки сброшены к значениям по умолчанию.', { type: 'info', title: 'Сброс' });
   };
+
+  // Закрываем popover при клике вне его
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showCustomColorPopover &&
+        customColorRef.current &&
+        popoverRef.current &&
+        !customColorRef.current.contains(event.target as Node) &&
+        !popoverRef.current.contains(event.target as Node)
+      ) {
+        setShowCustomColorPopover(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showCustomColorPopover]);
 
   return (
     <div className="settings-page">
@@ -148,17 +215,17 @@ const SystemThemeSettings: React.FC = () => {
 
       <div className="settings-content-wrapper">
         <div className="settings-grid">
-          <div className="settings-section h-100">
-            <div className="settings-section-header">
-              <i className="bi bi-droplet-half"></i>
-              <h3>Акцентный цвет</h3>
-            </div>
+            <div className="settings-section h-100">
+              <div className="settings-section-header">
+                <i className="bi bi-droplet-half"></i>
+                <h3>Акцентный цвет</h3>
+              </div>
             <div className="accent-colors-grid">
               {allAccentColors.map(color => (
-                <div
-                  key={color.key}
+                  <div
+                    key={color.key}
                   className={`accent-color-card ${settings.accentColor === color.key ? 'active' : ''}`}
-                  onClick={() => handleSettingsChange('accentColor', color.key)}
+                    onClick={() => handleSettingsChange('accentColor', color.key)}
                 >
                   <div className="accent-preview" style={{ background: color.preview }}>
                     <div className="accent-preview-content">
@@ -173,7 +240,7 @@ const SystemThemeSettings: React.FC = () => {
                 </div>
               ))}
               {/* Кастомный цвет как карточка с popover */}
-              <div className="custom-color-wrapper" style={{ position: 'relative' }}>
+              <div className="custom-color-wrapper" style={{ position: 'relative' }} ref={customColorRef}>
                 <div
                   className={`accent-color-card ${settings.accentColor.startsWith('#') || settings.accentColor.startsWith('linear-gradient') ? 'active' : ''}`}
                   onClick={handleCustomColorCardClick}
@@ -194,7 +261,10 @@ const SystemThemeSettings: React.FC = () => {
                 
                 {/* Popover для настройки кастомного цвета */}
                 {showCustomColorPopover && (
-                  <div className="custom-color-popover">
+                  <div 
+                    className={`custom-color-popover ${popoverPosition === 'fallback' ? 'popover-fallback' : `popover-${popoverPosition}`}`}
+                    ref={popoverRef}
+                  >
                     <div className="popover-header">
                       <h6>Цвет</h6>
                       <button 
@@ -246,76 +316,76 @@ const SystemThemeSettings: React.FC = () => {
             </div>
           </div>
           <div className="settings-section h-100">
-            <div className="settings-section-header">
-              <i className="bi bi-gear"></i>
-              <h3>Дополнительные настройки</h3>
-            </div>
-            <div className="settings-form">
-              <div className="form-group">
-                <label className="form-label">Анимации</label>
-                <select 
-                  className="form-select" 
-                  value={settings.animations}
-                  onChange={(e) => handleSettingsChange('animations', e.target.value)}
-                >
-                  <option value="enabled">Включены</option>
-                  <option value="reduced">Уменьшенные</option>
-                  <option value="disabled">Отключены</option>
-                </select>
-                <div className="form-text">Анимации переходов и эффектов в интерфейсе.</div>
+              <div className="settings-section-header">
+                <i className="bi bi-gear"></i>
+                <h3>Дополнительные настройки</h3>
               </div>
-              <div className="form-group">
-                <label className="form-label">Отображение сетки</label>
-                <select 
-                  className="form-select" 
-                  value={settings.gridDisplay}
-                  onChange={(e) => handleSettingsChange('gridDisplay', e.target.value)}
-                >
-                  <option value="auto">Авто</option>
-                  <option value="compact">Компактная</option>
-                  <option value="spacious">Просторная</option>
-                </select>
-                <div className="form-text">Стиль отображения сеток и таблиц.</div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Скругление углов</label>
-                <select 
-                  className="form-select" 
-                  value={settings.borderRadius}
-                  onChange={(e) => handleSettingsChange('borderRadius', e.target.value)}
-                >
-                  <option value="none">Без скругления</option>
-                  <option value="small">Малое</option>
-                  <option value="medium">Среднее</option>
-                  <option value="large">Большое</option>
-                </select>
-                <div className="form-text">Скругление углов у карточек и кнопок.</div>
-              </div>
-              <div className="form-group">
-                <div className="form-check form-switch form-check-lg">
-                  <input 
-                    className="form-check-input" 
-                    type="checkbox" 
-                    id="shadows" 
-                    checked={settings.shadows} 
-                    onChange={(e) => handleSettingsChange('shadows', e.target.checked)} 
-                  />
-                  <label className="form-check-label" htmlFor="shadows">Тени элементов</label>
+              <div className="settings-form">
+                <div className="form-group">
+                  <label className="form-label">Анимации</label>
+                  <select 
+                    className="form-select" 
+                    value={settings.animations}
+                    onChange={(e) => handleSettingsChange('animations', e.target.value)}
+                  >
+                    <option value="enabled">Включены</option>
+                    <option value="reduced">Уменьшенные</option>
+                    <option value="disabled">Отключены</option>
+                  </select>
+                  <div className="form-text">Анимации переходов и эффектов в интерфейсе.</div>
                 </div>
-                <div className="form-text">Отображение теней у карточек и модальных окон.</div>
-              </div>
-              <div className="form-group">
-                <div className="form-check form-switch form-check-lg">
-                  <input 
-                    className="form-check-input" 
-                    type="checkbox" 
-                    id="transitions" 
-                    checked={settings.transitions} 
-                    onChange={(e) => handleSettingsChange('transitions', e.target.checked)} 
-                  />
-                  <label className="form-check-label" htmlFor="transitions">Плавные переходы</label>
+                <div className="form-group">
+                  <label className="form-label">Отображение сетки</label>
+                  <select 
+                    className="form-select" 
+                    value={settings.gridDisplay}
+                    onChange={(e) => handleSettingsChange('gridDisplay', e.target.value)}
+                  >
+                    <option value="auto">Авто</option>
+                    <option value="compact">Компактная</option>
+                    <option value="spacious">Просторная</option>
+                  </select>
+                  <div className="form-text">Стиль отображения сеток и таблиц.</div>
                 </div>
-                <div className="form-text">Плавные анимации при изменении состояний элементов.</div>
+                <div className="form-group">
+                  <label className="form-label">Скругление углов</label>
+                  <select 
+                    className="form-select" 
+                    value={settings.borderRadius}
+                    onChange={(e) => handleSettingsChange('borderRadius', e.target.value)}
+                  >
+                    <option value="none">Без скругления</option>
+                    <option value="small">Малое</option>
+                    <option value="medium">Среднее</option>
+                    <option value="large">Большое</option>
+                  </select>
+                  <div className="form-text">Скругление углов у карточек и кнопок.</div>
+                </div>
+                <div className="form-group">
+                  <div className="form-check form-switch form-check-lg">
+                    <input 
+                      className="form-check-input" 
+                      type="checkbox" 
+                      id="shadows" 
+                      checked={settings.shadows} 
+                      onChange={(e) => handleSettingsChange('shadows', e.target.checked)} 
+                    />
+                    <label className="form-check-label" htmlFor="shadows">Тени элементов</label>
+                  </div>
+                  <div className="form-text">Отображение теней у карточек и модальных окон.</div>
+                </div>
+                <div className="form-group">
+                  <div className="form-check form-switch form-check-lg">
+                    <input 
+                      className="form-check-input" 
+                      type="checkbox" 
+                      id="transitions" 
+                      checked={settings.transitions} 
+                      onChange={(e) => handleSettingsChange('transitions', e.target.checked)} 
+                    />
+                    <label className="form-check-label" htmlFor="transitions">Плавные переходы</label>
+                  </div>
+                  <div className="form-text">Плавные анимации при изменении состояний элементов.</div>
               </div>
             </div>
           </div>

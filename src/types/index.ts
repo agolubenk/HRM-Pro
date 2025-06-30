@@ -69,4 +69,13 @@ export interface StatWidget {
     direction: 'up' | 'down';
     value: string;
   };
+}
+
+export interface ThemeSettings {
+  accentColor: string;
+  animations: 'enabled' | 'reduced' | 'disabled';
+  gridDisplay: 'auto' | 'compact' | 'spacious';
+  borderRadius: 'none' | 'small' | 'medium' | 'large';
+  shadows: boolean;
+  transitions: boolean;
 } 
