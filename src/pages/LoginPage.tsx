@@ -4,7 +4,6 @@ import './LoginPage.css';
 import RegisterModal from '../components/RegisterModal';
 import StandalonePageControls from '../components/StandalonePageControls';
 import ThemeSync from '../components/ThemeSync';
-import { AppProvider } from '../context/AppContext';
 
 const LoginPageContent: React.FC = () => {
     const [showRegisterModal, setShowRegisterModal] = useState(false);
@@ -50,7 +49,7 @@ const LoginPageContent: React.FC = () => {
                         <button type="submit" className="btn btn-login w-100 mt-4">Войти</button>
                     </form>
                     <div className="login-footer mt-4">
-                        <button type="button" className="btn btn-outline-primary w-100" onClick={() => setShowRegisterModal(true)}>
+                        <button type="button" className="btn btn-register w-100" onClick={() => setShowRegisterModal(true)}>
                             Регистрация
                         </button>
                     </div>
@@ -62,9 +61,7 @@ const LoginPageContent: React.FC = () => {
 };
 
 const LoginPage: React.FC = () => (
-    <AppProvider>
-        <LoginPageContent />
-    </AppProvider>
+    <LoginPageContent />
 );
 
 export default LoginPage; 

@@ -664,7 +664,7 @@ const SystemUsersSettings: React.FC = () => {
                         <i className="bi bi-x-circle me-1 d-none d-md-inline"></i>Сбросить доступы
                       </button>
                       <div className="dropdown">
-                        <button className="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button className="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                           <i className="bi bi-person-badge me-1 d-none d-md-inline"></i>Роли сотрудников
                         </button>
                         <ul className="dropdown-menu">
@@ -837,8 +837,8 @@ const SystemUsersSettings: React.FC = () => {
               </div>
               
               <div className="modal-footer justify-content-center">
-                <button type="button" className="btn btn-outline-primary" onClick={handleAddRoleModel}>
-                  <i className="bi bi-plus-lg me-2"></i>Добавить модель
+                <button type="button" className="btn btn-outline-primary btn-sm w-100 add-model-btn" onClick={handleAddRoleModel}>
+                  <i className="bi bi-plus me-1"></i>Добавить модель
                 </button>
               </div>
             </div>

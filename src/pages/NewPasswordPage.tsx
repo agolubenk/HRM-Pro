@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import './LoginPage.css'; // Reusing styles from LoginPage
 import StandalonePageControls from '../components/StandalonePageControls';
 import ThemeSync from '../components/ThemeSync';
-import { AppProvider } from '../context/AppContext';
 
 const NewPasswordPageContent: React.FC = () => {
     useEffect(() => {
@@ -38,7 +37,7 @@ const NewPasswordPageContent: React.FC = () => {
                         <button type="submit" className="btn btn-login w-100 mt-3">Сохранить пароль</button>
                     </form>
                     <div className="login-footer mt-4">
-                        <p><Link to="/login">Вернуться на страницу входа</Link></p>
+                        <p><Link to="/login" className="btn btn-outline-primary w-100">Вернуться на страницу входа</Link></p>
                     </div>
                 </div>
             </div>
@@ -47,9 +46,7 @@ const NewPasswordPageContent: React.FC = () => {
 };
 
 const NewPasswordPage: React.FC = () => (
-    <AppProvider>
-        <NewPasswordPageContent />
-    </AppProvider>
+    <NewPasswordPageContent />
 );
 
 export default NewPasswordPage; 
